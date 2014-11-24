@@ -1,3 +1,7 @@
 {"w": "Width",
- "h": "Height"
+ "h": "Height",
+ "rot": "Rotate",
+ "fit": "Fit",
+ "crop": "Crop",
+ "px": "Pixelate"
 }

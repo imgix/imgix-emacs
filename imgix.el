@@ -19,6 +19,12 @@
 (defvar imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
 (defvar imgix-params-codes (ht-keys imgix-params-title-lookup))
 (defvar imgix-params-titles (ht-values imgix-params-title-lookup))
+
+(setq imgix-buffer-url "http://jackangers.imgix.net/chester.png")
+(setq imgix-params-title-lookup (imgix-json-decode-hash (imgix-get-file-contents "params.json")))
+(setq imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
+(setq imgix-params-codes (ht-keys imgix-params-title-lookup))
+(setq imgix-params-titles (ht-values imgix-params-title-lookup))
 ;(ht-get imgix-params-title-lookup "w")
 
 ;; (let* ((params-pretty-lookup (imgix-json-decode-hash (imgix-get-file-contents "params.json")))
@@ -68,7 +74,8 @@
 	"Build a URL query string from a hash table key=value"
 	(let* ((result '()))
 		(ht-map (lambda (k v)
-					(add-to-list 'result (concat k "=" v)))
+					(when (and k v)
+						(add-to-list 'result (concat k "=" v))))
 				lookup)
 		(mapconcat 'identity result "&")))
 
@@ -79,7 +86,8 @@
 
 	(mapc (lambda (p)
 		    (let ((sides (split-string p "=")))
-				(ht-set! result (first sides) (second sides))))
+				(when (and (first sides) (second sides))
+					(ht-set! result (first sides) (second sides)))))
 		  parts)
 	result))
 
@@ -94,27 +102,29 @@
 
 	(ht-set! qs-lookup param-code-to-update param-value)
 
+	(message (concat "setting query" (imgix-build-qs qs-lookup))
 	(ht-set parts "query" (imgix-build-qs qs-lookup))
 
 	(setq imgix-buffer-url (imgix-build-url parts))
-	(imgix-display-image)
-))
+	(imgix-display-image)))
 
 (defun imgix-prompt-buffer-url ()
 	(interactive)
 		(setq imgix-buffer-url (read-from-minibuffer "URL: " imgix-buffer-url)))
 
 (defun imgix-display-image ()
-  (eww-browse-url imgix-buffer-url nil)
+  (message (concat "Displaying " imgix-buffer-url))
+  (kill-buffer "*eww*")
+  (eww-browse-url imgix-buffer-url t)
   (switch-to-buffer "*eww*")
   (delete-other-windows))
 
 
 (ht-get (imgix-parse-qs "h=500&w=700") "h")
 (ht-get (imgix-parse-qs "h=500&w=700") "w")
+
+(imgix-build-qs (imgix-parse-qs "h=500&w=700"))
 ;; TODO: this will do the imgix-prompt-list-pick and then rebuilt the url and (imgix-display-image url)
-
-
 ;;
 ;; start scratch...
 ;;
