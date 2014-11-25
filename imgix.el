@@ -18,7 +18,11 @@
 
 ;; TODO: normalize queries
 ;; TODO: do not load in defaults...
+;; TODO: encoding!!!!
+;; TODO: fix *eww* WRONG header...
 ;; TODO: tests
+;; TODO: speical nesting of URLs for blend/mask
+;; TODO: open url in default browser
 ;; TODO: custom mode line of current url...
 
 ;; TODO: should these be prefixed imgix/ or imgix-- ?
@@ -82,26 +86,26 @@
 
 (defun imgix-build-qs (lookup)
 	"Build a URL query string from a hash table LOOKUP"
-	(let* ((result2 '()))
+	(let* ((qs '()))
 		(ht-map (lambda (k v)
 				 	 (when (and (stringp k) (stringp v) (> (length k) 0)  (> (length v) 0) (not (string= (ht-get imgix-params-default-lookup k) v)))
-						(add-to-list 'result2 (concat k "=" v))))
+						(add-to-list 'qs (concat k "=" v))))
 				lookup)
-		(if (> (length result2) 0)
-			(mapconcat 'identity result2 "&")
+		(if (> (length qs) 0)
+			(mapconcat 'identity qs "&")
 			"")))
 
 (defun imgix-parse-qs (qs)
 	"Parse a query string into a hash table key=value&key=value"
-		(let* ((result3 (ht-create))
+		(let* ((parsed (ht-create))
 			   (parts (split-string qs "&")))
 
 		(mapc (lambda (p)
 				(let ((sides (split-string p "=")))
 					(when (and (first sides) (second sides))
-						(ht-set! result3 (first sides) (second sides)))))
+						(ht-set! parsed (first sides) (second sides)))))
 			  parts)
-		result3))
+		parsed))
 
 (defun imgix-update-url-param ()
 	(interactive)
