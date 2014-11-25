@@ -16,6 +16,16 @@
 				to-flip)
 		result))
 
+(defun imgix-get-file-contents (file-path)
+  (with-temp-buffer
+    (insert-file-contents file-path)
+    (buffer-string)))
+
+(defun imgix-json-decode-hash (to-decode)
+  (let ((json-object-type 'hash-table))
+    (json-read-from-string to-decode)))
+
+;; TODO: override *eww* with *imgix-visor* (get-buffer-create "*eww*")
 ;; TODO: normalize queries
 ;; TODO: do not load in defaults...
 ;; TODO: encoding!!!!
@@ -27,6 +37,8 @@
 
 ;; TODO: should these be prefixed imgix/ or imgix-- ?
 ;; TODO: s3 uploader / source configuration...?
+
+(setq eww-header-line-format "imgix visor") ;; override default *eww* buffer
 
 (defvar imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=250")
 (defvar imgix-params-default-lookup (imgix-json-decode-hash (imgix-get-file-contents "default_values.json")))
@@ -44,14 +56,6 @@
 ;(ht-get imgix-params-title-lookup "w")
 ;(ht-get imgix-params-default-lookup "w")
 
-(defun imgix-get-file-contents (file-path)
-  (with-temp-buffer
-    (insert-file-contents file-path)
-    (buffer-string)))
-
-(defun imgix-json-decode-hash (to-decode)
-  (let ((json-object-type 'hash-table))
-    (json-read-from-string to-decode)))
 
 (defun imgix-json-decode-plist (to-decode)
   (let ((json-object-type 'plist))
