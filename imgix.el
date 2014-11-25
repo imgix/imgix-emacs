@@ -9,6 +9,7 @@
 (require 'url)
 
 (defun ht-flip (to-flip)
+	"Flip keys and values for hash table TO-FLIP."
 	(let* ((result (ht-create)))
 		(ht-map (lambda (k v)
 				  (ht-set! result v k))
@@ -39,9 +40,9 @@
 ;(ht-get imgix-params-title-lookup "w")
 ;(ht-get imgix-params-default-lookup "w")
 
-(defun imgix-get-file-contents (filePath)
+(defun imgix-get-file-contents (file-path)
   (with-temp-buffer
-    (insert-file-contents filePath)
+    (insert-file-contents file-path)
     (buffer-string)))
 
 (defun imgix-json-decode-hash (to-decode)
@@ -80,7 +81,7 @@
 	inp))
 
 (defun imgix-build-qs (lookup)
-	"Build a URL query string from a hash table key=value"
+	"Build a URL query string from a hash table LOOKUP"
 	(let* ((result2 '()))
 		(ht-map (lambda (k v)
 				 	 (when (and (stringp k) (stringp v) (> (length k) 0)  (> (length v) 0) (not (string= (ht-get imgix-params-default-lookup k) v)))
@@ -117,15 +118,17 @@
 	(ht-set parts "query" (imgix-build-qs qs-lookup))
 
 	(setq imgix-buffer-url (imgix-build-url parts))
-	(imgix-display-image))))
+	(imgix-display-image)))
 
 (defun imgix-prompt-buffer-url ()
+	"Prompt the user for a full imgix image url"
 	(interactive)
 	(setq imgix-buffer-url (read-from-minibuffer "URL: " imgix-buffer-url))
 	(imgix-display-image))
 
 (defun imgix-display-image ()
-  (message (concat "Displaying " imgix-buffer-url))
+	"Display image in emacs browser eww"
+ ;;(message (concat "Displaying " imgix-buffer-url))
  ; (kill-buffer "*eww*")
   (eww-browse-url imgix-buffer-url t)
   (switch-to-buffer "*eww*")
@@ -217,5 +220,5 @@
 ;; )
 ;; (ht-map (lambda (x y) (message x)) blah)
 
-(provide 'imgix)
+;(provide 'imgix)
 ;;; imgix.el ends here
