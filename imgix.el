@@ -1,3 +1,9 @@
+;;; package --- Summary
+
+;;; Commentary:
+
+
+;;; Code:
 (require 'json)
 (require 'ht)
 (require 'url)
@@ -17,7 +23,7 @@
 ;; TODO: should these be prefixed imgix/ or imgix-- ?
 ;; TODO: s3 uploader / source configuration...?
 
-(defvar imgix-buffer-url "http://jackangers.imgix.net/chester.png")
+(defvar imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=250")
 (defvar imgix-params-default-lookup (imgix-json-decode-hash (imgix-get-file-contents "default_values.json")))
 (defvar imgix-params-title-lookup (imgix-json-decode-hash (imgix-get-file-contents "params.json")))
 (defvar imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
@@ -26,6 +32,7 @@
 
 (setq imgix-buffer-url "http://jackangers.imgix.net/chester.png")
 (setq imgix-params-title-lookup (imgix-json-decode-hash (imgix-get-file-contents "params.json")))
+(setq imgix-params-default-lookup (imgix-json-decode-hash (imgix-get-file-contents "default_values.json")))
 (setq imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
 (setq imgix-params-codes (ht-keys imgix-params-title-lookup))
 (setq imgix-params-titles (ht-values imgix-params-title-lookup))
@@ -67,26 +74,33 @@
 (defun imgix-build-url (parts)
 	(concat (ht-get parts "scheme") "://" (ht-get parts "host") (ht-get parts "path") "?" (ht-get parts "query")))
 
+(defun imgix-force-string (inp)
+  (if (numberp inp)
+	(number-to-string inp)
+	inp))
+
 (defun imgix-build-qs (lookup)
 	"Build a URL query string from a hash table key=value"
-	(let* ((result '()))
+	(let* ((result2 '()))
 		(ht-map (lambda (k v)
-					(when (and k v)
-						(add-to-list 'result (concat k "=" v))))
+				 	 (when (and (stringp k) (stringp v) (> (length k) 0)  (> (length v) 0) (not (string= (ht-get imgix-params-default-lookup k) v)))
+						(add-to-list 'result2 (concat k "=" v))))
 				lookup)
-		(mapconcat 'identity result "&")))
+		(if (> (length result2) 0)
+			(mapconcat 'identity result2 "&")
+			"")))
 
 (defun imgix-parse-qs (qs)
 	"Parse a query string into a hash table key=value&key=value"
-	(let* ((result (ht-create))
-		   (parts (split-string qs "&")))
+		(let* ((result3 (ht-create))
+			   (parts (split-string qs "&")))
 
-	(mapc (lambda (p)
-		    (let ((sides (split-string p "=")))
-				(when (and (first sides) (second sides))
-					(ht-set! result (first sides) (second sides)))))
-		  parts)
-	result))
+		(mapc (lambda (p)
+				(let ((sides (split-string p "=")))
+					(when (and (first sides) (second sides))
+						(ht-set! result3 (first sides) (second sides)))))
+			  parts)
+		result3))
 
 (defun imgix-update-url-param ()
 	(interactive)
@@ -99,11 +113,11 @@
 
 	(ht-set! qs-lookup param-code-to-update param-value)
 
-	(message (concat "setting query" (imgix-build-qs qs-lookup))
+	;(message (concat "setting query" (imgix-build-qs qs-lookup))
 	(ht-set parts "query" (imgix-build-qs qs-lookup))
 
 	(setq imgix-buffer-url (imgix-build-url parts))
-	(imgix-display-image)))
+	(imgix-display-image))))
 
 (defun imgix-prompt-buffer-url ()
 	(interactive)
@@ -112,7 +126,7 @@
 
 (defun imgix-display-image ()
   (message (concat "Displaying " imgix-buffer-url))
-  (kill-buffer "*eww*")
+ ; (kill-buffer "*eww*")
   (eww-browse-url imgix-buffer-url t)
   (switch-to-buffer "*eww*")
 
@@ -123,10 +137,10 @@
 		(insert (concat "\n" imgix-buffer-url))))))
 
 
-(ht-get (imgix-parse-qs "h=500&w=700") "h")
-(ht-get (imgix-parse-qs "h=500&w=700") "w")
+;; (ht-get (imgix-parse-qs "h=500&w=700") "h")
+;; (ht-get (imgix-parse-qs "h=500&w=700") "w")
 
-(imgix-build-qs (imgix-parse-qs "h=500&w=700"))
+;; (imgix-build-qs (imgix-parse-qs "h=500&w=700"))
 ;; TODO: this will do the imgix-prompt-list-pick and then rebuilt the url and (imgix-display-image url)
 ;;
 ;; start scratch...
@@ -138,14 +152,14 @@
 ;; https://github.com/bbatsov/emacs-lisp-style-guide
 
 ;; building qs
-(mapcar (lambda (x) (concat x "--")) (split-string "w=500&h=700" "&"))
+;; (mapcar (lambda (x) (concat x "--")) (split-string "w=500&h=700" "&"))
 
-(let* ((qs (ht-create))
-      )
-	(ht-set! qs "w" "500")
-	(ht-set! qs "h" "700")
-	(imgix-build-qs qs)
-)
+;; (let* ((qs (ht-create))
+;;       )
+;; 	(ht-set! qs "w" "500")
+;; 	(ht-set! qs "h" "700")
+;; 	(imgix-build-qs qs)
+;; )
 
 ;; opening image
 
@@ -202,3 +216,6 @@
 ;; (ht-get (ht-flip blah) "blend")
 ;; )
 ;; (ht-map (lambda (x y) (message x)) blah)
+
+(provide 'imgix)
+;;; imgix.el ends here
