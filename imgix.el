@@ -25,9 +25,10 @@
   (let ((json-object-type 'hash-table))
     (json-read-from-string to-decode)))
 
+;; TODO: proper major mode
 ;; TODO: override *eww* with *imgix-visor* (get-buffer-create "*eww*")
 ;; TODO: normalize queries
-;; TODO: do not load in defaults...
+;; TODO: option selection for params that have options like fit/crop/etc
 ;; TODO: encoding!!!!
 ;; TODO: fix *eww* WRONG header...
 ;; TODO: tests
@@ -38,7 +39,7 @@
 ;; TODO: should these be prefixed imgix/ or imgix-- ?
 ;; TODO: s3 uploader / source configuration...?
 
-(setq eww-header-line-format "imgix visor") ;; override default *eww* buffer
+(setq eww-header-line-format "imgix visor - emacs edition") ;; override default *eww* buffer
 
 (defvar imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=250")
 (defvar imgix-params-default-lookup (imgix-json-decode-hash (imgix-get-file-contents "default_values.json")))
