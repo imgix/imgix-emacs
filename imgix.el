@@ -9,12 +9,16 @@
 				to-flip)
 		result))
 
+;; TODO: normalize queries
+;; TODO: do not load in defaults...
 ;; TODO: tests
 ;; TODO: custom mode line of current url...
+
 ;; TODO: should these be prefixed imgix/ or imgix-- ?
-;; TODO: s3 uploader...?
+;; TODO: s3 uploader / source configuration...?
 
 (defvar imgix-buffer-url "http://jackangers.imgix.net/chester.png")
+(defvar imgix-params-default-lookup (imgix-json-decode-hash (imgix-get-file-contents "default_values.json")))
 (defvar imgix-params-title-lookup (imgix-json-decode-hash (imgix-get-file-contents "params.json")))
 (defvar imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
 (defvar imgix-params-codes (ht-keys imgix-params-title-lookup))
@@ -26,14 +30,7 @@
 (setq imgix-params-codes (ht-keys imgix-params-title-lookup))
 (setq imgix-params-titles (ht-values imgix-params-title-lookup))
 ;(ht-get imgix-params-title-lookup "w")
-
-;; (let* ((params-pretty-lookup (imgix-json-decode-hash (imgix-get-file-contents "params.json")))
-;; 	   (params-code-lookup (ht-flip params-pretty-lookup))
-;; 	   (param-codes (ht-keys params-pretty-lookup))
-;; 	   (param-titles (ht-values params-pretty-lookup)))
-;; 	;params
-;; 	(imgix-prompt-list-pick param-titles)
-;; )
+;(ht-get imgix-params-default-lookup "w")
 
 (defun imgix-get-file-contents (filePath)
   (with-temp-buffer
@@ -110,14 +107,20 @@
 
 (defun imgix-prompt-buffer-url ()
 	(interactive)
-		(setq imgix-buffer-url (read-from-minibuffer "URL: " imgix-buffer-url)))
+	(setq imgix-buffer-url (read-from-minibuffer "URL: " imgix-buffer-url))
+	(imgix-display-image))
 
 (defun imgix-display-image ()
   (message (concat "Displaying " imgix-buffer-url))
   (kill-buffer "*eww*")
   (eww-browse-url imgix-buffer-url t)
   (switch-to-buffer "*eww*")
-  (delete-other-windows))
+
+  ;; TODO: is there an eww-onload hook???
+  (run-at-time "2 sec" nil (lambda ()
+	  (with-current-buffer "*eww*"
+		(end-of-buffer)
+		(insert (concat "\n" imgix-buffer-url))))))
 
 
 (ht-get (imgix-parse-qs "h=500&w=700") "h")
@@ -174,8 +177,6 @@
 ;; 	(imgix-prompt-list-pick param-titles)
 ;; )
 
-
-
 ;; (split-string "/file?x=1" "?")
 ;; (second (split-string "/file?x=1" "?"))
 
@@ -197,8 +198,6 @@
 ;; (ht-get blah "b")
 
 ;; (url-
-
-
 
 ;; (ht-get (ht-flip blah) "blend")
 ;; )
