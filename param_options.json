@@ -1,0 +1,12 @@
+{
+
+ "txtclip": ["start", "middle", "end"],
+ "palette": ["css"],
+ "bs": ["inherit"],
+ "bm": ["lighten", "screen", "dodge", "overlay", "softlight", "hardlight", "darken", "multiply", "burn",
+ "luminosity", "saturation", "color", "hue", "exclusion", "difference"],
+ "markfit": ["clip", "max", "crop", "scale", "clamp"],
+ "auto": ["enhance", "redeye", "format"],
+ "markalign": []
+
+}

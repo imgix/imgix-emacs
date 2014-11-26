@@ -5,8 +5,10 @@
 
 ;;; Code:
 (require 'json)
-(require 'ht)
 (require 'url)
+(require 'ht)
+(require 'dash)
+
 
 (defun ht-flip (to-flip)
 	"Flip keys and values for hash table TO-FLIP."
@@ -28,11 +30,14 @@
 ;; TODO: proper major mode
 ;; TODO: override *eww* with *imgix-visor* (get-buffer-create "*eww*")
 ;; TODO: normalize queries
+;; TODO: put json files in data/ dir (or whatever the best practice is)
+;; TODO: melpa for (package-install 'imgix)  !!
 ;; TODO: option selection for params that have options like fit/crop/etc
 ;; TODO: encoding!!!!
+;; TODO: proper space-based formatting
 ;; TODO: fix *eww* WRONG header...
 ;; TODO: tests
-;; TODO: speical nesting of URLs for blend/mask
+;; TODO: special nesting of URLs for blend/mask
 ;; TODO: open url in default browser
 ;; TODO: custom mode line of current url...
 
@@ -47,6 +52,8 @@
 (defvar imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
 (defvar imgix-params-codes (ht-keys imgix-params-title-lookup))
 (defvar imgix-params-titles (ht-values imgix-params-title-lookup))
+(defvar imgix-params-accepts-url '("mark", "mask", "blend"))
+(defvar imgix-params-accepts-multiple '("auto", "markalign", "ba")) ;; others?
 
 (setq imgix-buffer-url "http://jackangers.imgix.net/chester.png")
 (setq imgix-params-title-lookup (imgix-json-decode-hash (imgix-get-file-contents "params.json")))
@@ -64,8 +71,22 @@
 
 (defun imgix-prompt-list-pick (list)
   (interactive)
-  (let ((arg (ido-completing-read "Select from list: " list)))
+  (let ((arg (ido-completing-read "Select param: " list)))
      arg))
+
+(defun imgix-make-combos (list)
+  (if (null list) '(nil)
+      (let* ((a (car list))
+             (d (cdr list))
+             (s (combos d))
+             (v (mapcar (lambda (x) (cons a x)) s)))
+        (append s v))))
+
+(defun imgix-flatten-combos (list)
+  (mapcar
+	(lambda (x)
+       (mapconcat 'identity x ","))
+	(-non-nil list)))
 
 (defun imgix-parse-url (url)
 	"Parse a url to a hash table via (url-generic-parse-url) but breaking up path and query"
@@ -149,12 +170,6 @@
 		(insert (concat "\n" imgix-buffer-url))))))
 
 
-;; (ht-get (imgix-parse-qs "h=500&w=700") "h")
-;; (ht-get (imgix-parse-qs "h=500&w=700") "w")
-
-;; (imgix-build-qs (imgix-parse-qs "h=500&w=700"))
-;; TODO: this will do the imgix-prompt-list-pick and then rebuilt the url and (imgix-display-image url)
-;;
 ;; start scratch...
 ;;
 
@@ -162,72 +177,6 @@
 
 ;; https://github.com/magit/git-modes/blob/master/git-commit-mode.el
 ;; https://github.com/bbatsov/emacs-lisp-style-guide
-
-;; building qs
-;; (mapcar (lambda (x) (concat x "--")) (split-string "w=500&h=700" "&"))
-
-;; (let* ((qs (ht-create))
-;;       )
-;; 	(ht-set! qs "w" "500")
-;; 	(ht-set! qs "h" "700")
-;; 	(imgix-build-qs qs)
-;; )
-
-;; opening image
-
-;; (eww-browse-url "http://jackangers.imgix.net/chester.png?px=25" t)
-;; (delete-other-windows)
-;; (switch-to-buffer "*eww*")
-
-;; (let ((blah "one"))
-;; 	(message blah)
-;; 	(let ((blah "two"))
-;; 		(message blah))
-;; 	(message blah))
-
-
-;; (setq ddd '())
-
-;; (message (prin1-to-string ddd))
-;; (add-to-list 'ddd "2")
-;; (add-to-list
-
-;; ;;; TODO: a query parser
-
-;; ;(json-read-from-string (imgix-get-file-contents "params.json"))
-;; (let* ((params-pretty-lookup (imgix-json-decode-hash (imgix-get-file-contents "params.json")))
-;; 	   (params-code-lookup (ht-flip params-pretty-lookup))
-;; 	   (param-codes (ht-keys params-pretty-lookup))
-;; 	   (param-titles (ht-values params-pretty-lookup)))
-;; 	;params
-;; 	(imgix-prompt-list-pick param-titles)
-;; )
-
-;; (split-string "/file?x=1" "?")
-;; (second (split-string "/file?x=1" "?"))
-
-;; (url-type (url-generic-parse-url "http://jackangers.imgix.net/chester.png"))
-;; (ht-get (imgix-parse-url "http://jackangers.imgix.net/chester.png") "path")
-
-
-;; (setq zzz '(chester cat))
-
-
-;; (when (eq (length zzz) 2) (message "yup"))
-
-;; (plist-get zzz 'chester)
-
-;; (setq blah (ht-create))
-
-;; (ht-set! blah "b" "blend")
-
-;; (ht-get blah "b")
-
-;; (url-
-
-;; (ht-get (ht-flip blah) "blend")
-;; )
-;; (ht-map (lambda (x y) (message x)) blah)
 
 ;(provide 'imgix)
 ;;; imgix.el ends here
