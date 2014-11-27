@@ -11,12 +11,14 @@
 
 
 (defun ht-flip (to-flip)
-	"Flip keys and values for hash table TO-FLIP."
-	(let* ((result (ht-create)))
-		(ht-map (lambda (k v)
-				  (ht-set! result v k))
-				to-flip)
-		result))
+  "Flip keys and values for hash table TO-FLIP."
+  (let* ((result (ht-create)))
+    (ht-map
+      (lambda (k v)
+        (ht-set! result v k))
+      to-flip)
+    result))
+
 
 (defun imgix-get-file-contents (file-path)
   (with-temp-buffer
@@ -27,6 +29,7 @@
   (let ((json-object-type 'hash-table))
     (json-read-from-string to-decode)))
 
+;; TODO: option to to select param menu from full half buffer ( so you can read all options)
 ;; TODO: proper major mode
 ;; TODO: override *eww* with *imgix-visor* (get-buffer-create "*eww*")
 ;; TODO: normalize queries
@@ -76,98 +79,99 @@
 
 (defun imgix-make-combos (list)
   (if (null list) '(nil)
-      (let* ((a (car list))
-             (d (cdr list))
-             (s (combos d))
-             (v (mapcar (lambda (x) (cons a x)) s)))
-        (append s v))))
+    (let* ((a (car list))
+           (d (cdr list))
+           (s (combos d))
+           (v (mapcar (lambda (x) (cons a x)) s)))
+    (append s v))))
 
 (defun imgix-flatten-combos (list)
   (mapcar
-	(lambda (x)
-       (mapconcat 'identity x ","))
-	(-non-nil list)))
+    (lambda (x)
+      (mapconcat 'identity x ","))
+    (-non-nil list)))
 
 (defun imgix-parse-url (url)
-	"Parse a url to a hash table via (url-generic-parse-url) but breaking up path and query"
-	(let* ((result (ht-create))
-		   (parts (url-generic-parse-url url))
-		   (fn-parts (split-string (url-filename parts) "?"))
-		   (path (car fn-parts))
-		   (query (if (eq (length fn-parts) 2) (second fn-parts) "")))
+  "Parse a url to a hash table via (url-generic-parse-url) but breaking up path and query"
+  (let* ((result (ht-create))
+         (parts (url-generic-parse-url url))
+         (fn-parts (split-string (url-filename parts) "?"))
+         (path (car fn-parts))
+         (query (if (eq (length fn-parts) 2) (second fn-parts) "")))
 
-	  (ht-set! result "scheme" (url-type parts))
-	  (ht-set! result "host" (url-host parts))
-	  (ht-set! result "path" path)
-	  (ht-set! result "query" query)
+    (ht-set! result "scheme" (url-type parts))
+    (ht-set! result "host" (url-host parts))
+	(ht-set! result "path" path)
+	(ht-set! result "query" query)
 	result))
 
 (defun imgix-build-url (parts)
-	(concat (ht-get parts "scheme") "://" (ht-get parts "host") (ht-get parts "path") "?" (ht-get parts "query")))
+  (concat (ht-get parts "scheme") "://" (ht-get parts "host") (ht-get parts "path") "?" (ht-get parts "query")))
 
 (defun imgix-force-string (inp)
   (if (numberp inp)
-	(number-to-string inp)
-	inp))
+    (number-to-string inp)
+    inp))
 
 (defun imgix-build-qs (lookup)
-	"Build a URL query string from a hash table LOOKUP"
-	(let* ((qs '()))
-		(ht-map (lambda (k v)
-				 	 (when (and (stringp k) (stringp v) (> (length k) 0)  (> (length v) 0) (not (string= (ht-get imgix-params-default-lookup k) v)))
-						(add-to-list 'qs (concat k "=" v))))
-				lookup)
-		(if (> (length qs) 0)
-			(mapconcat 'identity qs "&")
-			"")))
+  "Build a URL query string from a hash table LOOKUP"
+  (let* ((qs '()))
+    (ht-map (lambda (k v)
+              (when (and (stringp k) (stringp v) (> (length k) 0) (> (length v) 0)
+                         (not (string= (ht-get imgix-params-default-lookup k) v)))
+                (add-to-list 'qs (concat k "=" v))))
+            lookup)
+
+    (if (> (length qs) 0)
+      (mapconcat 'identity qs "&")
+      "")))
 
 (defun imgix-parse-qs (qs)
-	"Parse a query string into a hash table key=value&key=value"
-		(let* ((parsed (ht-create))
-			   (parts (split-string qs "&")))
+  "Parse a query string into a hash table key=value&key=value"
+  (let* ((parsed (ht-create))
+         (parts (split-string qs "&")))
 
-		(mapc (lambda (p)
-				(let ((sides (split-string p "=")))
-					(when (and (first sides) (second sides))
-						(ht-set! parsed (first sides) (second sides)))))
-			  parts)
-		parsed))
+    (mapc (lambda (p)
+            (let ((sides (split-string p "=")))
+              (when (and (first sides) (second sides))
+                (ht-set! parsed (first sides) (second sides)))))
+           parts)
+     parsed))
 
 (defun imgix-update-url-param ()
-	(interactive)
-	(let* ((parts (imgix-parse-url imgix-buffer-url))
-		   (qs-lookup (imgix-parse-qs (ht-get parts "query")))
-		   (param-title-to-update (imgix-prompt-list-pick imgix-params-titles))
-		   (param-code-to-update (ht-get imgix-params-code-lookup param-title-to-update))
-		   (cur-param-value (ht-get qs-lookup param-code-to-update))
-		   (param-value (read-from-minibuffer (concat "Value for " param-title-to-update ": ") cur-param-value)))
+  (interactive)
+  (let* ((parts (imgix-parse-url imgix-buffer-url))
+         (qs-lookup (imgix-parse-qs (ht-get parts "query")))
+         (param-title-to-update (imgix-prompt-list-pick imgix-params-titles))
+         (param-code-to-update (ht-get imgix-params-code-lookup param-title-to-update))
+         (cur-param-value (ht-get qs-lookup param-code-to-update))
+         (param-value (read-from-minibuffer (concat "Value for " param-title-to-update ": ") cur-param-value)))
 
-	(ht-set! qs-lookup param-code-to-update param-value)
+    (ht-set! qs-lookup param-code-to-update param-value)
 
-	;(message (concat "setting query" (imgix-build-qs qs-lookup))
-	(ht-set parts "query" (imgix-build-qs qs-lookup))
+    ;(message (concat "setting query" (imgix-build-qs qs-lookup))
+    (ht-set parts "query" (imgix-build-qs qs-lookup))
 
-	(setq imgix-buffer-url (imgix-build-url parts))
-	(imgix-display-image)))
+    (setq imgix-buffer-url (imgix-build-url parts))
+    (imgix-display-image)))
 
 (defun imgix-prompt-buffer-url ()
-	"Prompt the user for a full imgix image url"
-	(interactive)
-	(setq imgix-buffer-url (read-from-minibuffer "URL: " imgix-buffer-url))
-	(imgix-display-image))
+  "Prompt the user for a full imgix image url"
+  (interactive)
+  (setq imgix-buffer-url (read-from-minibuffer "URL: " imgix-buffer-url))
+  (imgix-display-image))
 
 (defun imgix-display-image ()
-	"Display image in emacs browser eww"
- ;;(message (concat "Displaying " imgix-buffer-url))
- ; (kill-buffer "*eww*")
+  "Display image in emacs browser eww"
+  ;;(message (concat "Displaying " imgix-buffer-url))
+  ; (kill-buffer "*eww*")
   (eww-browse-url imgix-buffer-url t)
   (switch-to-buffer "*eww*")
-
   ;; TODO: is there an eww-onload hook???
   (run-at-time "2 sec" nil (lambda ()
-	  (with-current-buffer "*eww*"
-		(end-of-buffer)
-		(insert (concat "\n" imgix-buffer-url))))))
+  (with-current-buffer "*eww*"
+    (end-of-buffer)
+    (insert (concat "\n" imgix-buffer-url))))))
 
 
 ;; start scratch...
