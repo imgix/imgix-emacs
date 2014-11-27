@@ -1,12 +1,25 @@
 {
-
  "txtclip": ["start", "middle", "end"],
  "palette": ["css"],
  "bs": ["inherit"],
  "bm": ["lighten", "screen", "dodge", "overlay", "softlight", "hardlight", "darken", "multiply", "burn",
- "luminosity", "saturation", "color", "hue", "exclusion", "difference"],
- "markfit": ["clip", "max", "crop", "scale", "clamp"],
- "auto": ["enhance", "redeye", "format"],
- "markalign": []
+        "luminosity", "saturation", "color", "hue", "exclusion", "difference"],
+
+ "markfit": ["clip", "max", "crop", "scale", "clamp", "fill"],
+
+ "fit": ["clip", "max", "crop", "scale", "clamp", "fill"],
+ "crop": ["top", "top,left", "top,right", "bottom", "bottom,left", "bottom,right", "faces"],
+
+ "bf": ["clip", "max", "crop", "scale", "clamp", "fill"],
+ "auto": ["enhance", "redeye", "format", "enhance,format"],
+ "markalign": ["top,left", "top,center", "top,right", "middle,left", "middle,center", "middle, right", "bottom,left", "bottom,center", "bottom,right"],
+ "txtalign": ["top,left", "top,center", "top,right", "middle,left", "middle,center", "middle, right", "bottom,left", "bottom,center", "bottom,right"],
+ "ba": ["top,left", "top,center", "top,right", "middle,left", "middle,center", "middle, right", "bottom,left", "bottom,center", "bottom,right"],
+ "flip": ["h", "v"],
+ "lossless": ["0", "1"],
+ "orient": ["90", "180", "270"],
+ "fm": ["jpg", "png", "pjpg", "gif"],
+ "font": []
+
 
 }

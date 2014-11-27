@@ -52,6 +52,8 @@
 (defvar imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=250")
 (defvar imgix-params-default-lookup (imgix-json-decode-hash (imgix-get-file-contents "default_values.json")))
 (defvar imgix-params-title-lookup (imgix-json-decode-hash (imgix-get-file-contents "params.json")))
+(defvar imgix-params-option-lookup (imgix-json-decode-hash (imgix-get-file-contents "param_options.json")))
+;(defvar imgix-params-codes-with-options (ht-keys imgix-params-options-lookup))
 (defvar imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
 (defvar imgix-params-codes (ht-keys imgix-params-title-lookup))
 (defvar imgix-params-titles (ht-values imgix-params-title-lookup))
@@ -66,6 +68,8 @@
 (setq imgix-params-titles (ht-values imgix-params-title-lookup))
 ;(ht-get imgix-params-title-lookup "w")
 ;(ht-get imgix-params-default-lookup "w")
+
+;(type-of (ht-get imgix-params-option-lookup "txtalign"))
 
 
 (defun imgix-json-decode-plist (to-decode)
@@ -144,14 +148,22 @@
          (qs-lookup (imgix-parse-qs (ht-get parts "query")))
          (param-title-to-update (imgix-prompt-list-pick imgix-params-titles))
          (param-code-to-update (ht-get imgix-params-code-lookup param-title-to-update))
+
          (cur-param-value (ht-get qs-lookup param-code-to-update))
-         (param-value (read-from-minibuffer (concat "Value for " param-title-to-update ": ") cur-param-value)))
+         (cur-param-options (mapcar 'identity (ht-get imgix-params-option-lookup param-code-to-update)))
+         (prompt-text (concat "Value for " param-title-to-update ": "))
+
+         (param-value
+           (if cur-param-options
+             (progn
+                ;; ensure it's at the start of the list
+                (delete cur-param-value cur-param-options)
+                (add-to-list 'cur-param-options cur-param-value)
+                (ido-completing-read prompt-text cur-param-options)) ;; TODO; track require-match
+              (read-from-minibuffer prompt-text cur-param-value))))
 
     (ht-set! qs-lookup param-code-to-update param-value)
-
-    ;(message (concat "setting query" (imgix-build-qs qs-lookup))
     (ht-set parts "query" (imgix-build-qs qs-lookup))
-
     (setq imgix-buffer-url (imgix-build-url parts))
     (imgix-display-image)))
 
