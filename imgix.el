@@ -37,8 +37,6 @@
 ;; TODO: melpa for (package-install 'imgix)  !!
 ;; TODO: option selection for params that have options like fit/crop/etc
 ;; TODO: encoding!!!!
-;; TODO: proper space-based formatting
-;; TODO: fix *eww* WRONG header...
 ;; TODO: tests
 ;; TODO: special nesting of URLs for blend/mask
 ;; TODO: open url in default browser
@@ -57,8 +55,8 @@
 (defvar imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
 (defvar imgix-params-codes (ht-keys imgix-params-title-lookup))
 (defvar imgix-params-titles (ht-values imgix-params-title-lookup))
-(defvar imgix-params-accepts-url '("mark", "mask", "blend"))
-(defvar imgix-params-accepts-multiple '("auto", "markalign", "ba")) ;; others?
+(defvar imgix-params-accepts-url '("mark" "mask" "blend"))
+;(defvar imgix-params-accepts-multiple '("auto", "markalign", "ba")) ;; others?
 
 (setq imgix-buffer-url "http://jackangers.imgix.net/chester.png")
 (setq imgix-params-title-lookup (imgix-json-decode-hash (imgix-get-file-contents "params.json")))
@@ -76,11 +74,6 @@
   (let ((json-object-type 'plist))
     (json-read-from-string to-decode)))
 
-(defun imgix-prompt-list-pick (list)
-  (interactive)
-  (let ((arg (ido-completing-read "Select param: " list)))
-     arg))
-
 (defun imgix-make-combos (list)
   (if (null list) '(nil)
     (let* ((a (car list))
@@ -95,6 +88,10 @@
       (mapconcat 'identity x ","))
     (-non-nil list)))
 
+(defun imgix-is-url-encoded (txt)
+  "is TXT url encoded"
+  (and (not (string= txt (url-unhex-string txt)))))
+
 (defun imgix-parse-url (url)
   "Parse a url to a hash table via (url-generic-parse-url) but breaking up path and query"
   (let* ((result (ht-create))
@@ -105,9 +102,9 @@
 
     (ht-set! result "scheme" (url-type parts))
     (ht-set! result "host" (url-host parts))
-	(ht-set! result "path" path)
-	(ht-set! result "query" query)
-	result))
+    (ht-set! result "path" path)
+    (ht-set! result "query" query)
+    result))
 
 (defun imgix-build-url (parts)
   (concat (ht-get parts "scheme") "://" (ht-get parts "host") (ht-get parts "path") "?" (ht-get parts "query")))
@@ -121,10 +118,15 @@
   "Build a URL query string from a hash table LOOKUP"
   (let* ((qs '()))
     (ht-map (lambda (k v)
-              (when (and (stringp k) (stringp v) (> (length k) 0) (> (length v) 0)
+              (when (and (stringp k) (stringp v)
+                         (> (length k) 0) (> (length v) 0)
                          (not (string= (ht-get imgix-params-default-lookup k) v)))
-                (add-to-list 'qs (concat k "=" v))))
-            lookup)
+				(if (member k imgix-params-accepts-url)
+                  (add-to-list 'qs (concat k "=" (if (imgix-is-url-encoded v)
+                                                   v
+                                                   (url-hexify-string v))))
+                  (add-to-list 'qs (concat k "=" v)))))
+             lookup)
 
     (if (> (length qs) 0)
       (mapconcat 'identity qs "&")
@@ -146,7 +148,7 @@
   (interactive)
   (let* ((parts (imgix-parse-url imgix-buffer-url))
          (qs-lookup (imgix-parse-qs (ht-get parts "query")))
-         (param-title-to-update (imgix-prompt-list-pick imgix-params-titles))
+         (param-title-to-update (ido-completing-read "Select param:" imgix-params-titles))
          (param-code-to-update (ht-get imgix-params-code-lookup param-title-to-update))
 
          (cur-param-value (ht-get qs-lookup param-code-to-update))
@@ -159,8 +161,11 @@
                 ;; ensure it's at the start of the list
                 (delete cur-param-value cur-param-options)
                 (add-to-list 'cur-param-options cur-param-value)
-                (ido-completing-read prompt-text cur-param-options)) ;; TODO; track require-match
-              (read-from-minibuffer prompt-text cur-param-value))))
+                (ido-completing-read prompt-text (-non-nil cur-param-options)))
+             (read-from-minibuffer
+               prompt-text (if (member param-code-to-update                                                            imgix-params-accepts-url)
+                             (url-unhex-string cur-param-value)
+                             cur-param-value)))))
 
     (ht-set! qs-lookup param-code-to-update param-value)
     (ht-set parts "query" (imgix-build-qs qs-lookup))
