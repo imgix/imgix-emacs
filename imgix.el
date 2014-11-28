@@ -19,7 +19,6 @@
       to-flip)
     result))
 
-
 (defun imgix-get-file-contents (file-path)
   (with-temp-buffer
     (insert-file-contents file-path)
@@ -29,6 +28,10 @@
   (let ((json-object-type 'hash-table))
     (json-read-from-string to-decode)))
 
+(defun imgix-load-json (data-path)
+	(imgix-json-decode-hash (imgix-get-file-contents data-path)))
+
+;; TODO: move/back and forth...?
 ;; TODO: option to to select param menu from full half buffer ( so you can read all options)
 ;; TODO: proper major mode
 ;; TODO: override *eww* with *imgix-visor* (get-buffer-create "*eww*")
@@ -36,7 +39,6 @@
 ;; TODO: put json files in data/ dir (or whatever the best practice is)
 ;; TODO: melpa for (package-install 'imgix)  !!
 ;; TODO: option selection for params that have options like fit/crop/etc
-;; TODO: encoding!!!!
 ;; TODO: tests
 ;; TODO: special nesting of URLs for blend/mask
 ;; TODO: open url in default browser
@@ -48,26 +50,33 @@
 (setq eww-header-line-format "imgix visor - emacs edition") ;; override default *eww* buffer
 
 (defvar imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=250")
-(defvar imgix-params-default-lookup (imgix-json-decode-hash (imgix-get-file-contents "default_values.json")))
-(defvar imgix-params-title-lookup (imgix-json-decode-hash (imgix-get-file-contents "params.json")))
-(defvar imgix-params-option-lookup (imgix-json-decode-hash (imgix-get-file-contents "param_options.json")))
+(defvar imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
+(defvar imgix-params-title-lookup (imgix-load-json "data/params.json"))
+(defvar imgix-params-option-lookup (imgix-load-json "data/param_options.json"))
 ;(defvar imgix-params-codes-with-options (ht-keys imgix-params-options-lookup))
 (defvar imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
 (defvar imgix-params-codes (ht-keys imgix-params-title-lookup))
 (defvar imgix-params-titles (ht-values imgix-params-title-lookup))
-(defvar imgix-params-accepts-url '("mark" "mask" "blend"))
+(defvar imgix-params-accepts-url '("mark" "mask" "blend" "txt"))
+(defvar imgix-last-updated-param "w")
 ;(defvar imgix-params-accepts-multiple '("auto", "markalign", "ba")) ;; others?
 
 (setq imgix-buffer-url "http://jackangers.imgix.net/chester.png")
-(setq imgix-params-title-lookup (imgix-json-decode-hash (imgix-get-file-contents "params.json")))
-(setq imgix-params-default-lookup (imgix-json-decode-hash (imgix-get-file-contents "default_values.json")))
+(setq imgix-params-title-lookup (imgix-load-json "data/params.json"))
+(setq imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
 (setq imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
 (setq imgix-params-codes (ht-keys imgix-params-title-lookup))
 (setq imgix-params-titles (ht-values imgix-params-title-lookup))
+(setq imgix-params-accepts-url '("mark" "mask" "blend" "txt"))
 ;(ht-get imgix-params-title-lookup "w")
 ;(ht-get imgix-params-default-lookup "w")
 
 ;(type-of (ht-get imgix-params-option-lookup "txtalign"))
+
+(defun imgix-force-front (item list)
+   (delete item list)
+   (add-to-list 'list item)
+   (-non-nil list))
 
 
 (defun imgix-json-decode-plist (to-decode)
@@ -107,7 +116,10 @@
     result))
 
 (defun imgix-build-url (parts)
-  (concat (ht-get parts "scheme") "://" (ht-get parts "host") (ht-get parts "path") "?" (ht-get parts "query")))
+  (concat (ht-get parts "scheme") "://"
+          (ht-get parts "host")
+          (ht-get parts "path") "?"
+          (ht-get parts "query")))
 
 (defun imgix-force-string (inp)
   (if (numberp inp)
@@ -118,13 +130,22 @@
   "Build a URL query string from a hash table LOOKUP"
   (let* ((qs '()))
     (ht-map (lambda (k v)
+              ;; if param has a value and its not its default
               (when (and (stringp k) (stringp v)
                          (> (length k) 0) (> (length v) 0)
                          (not (string= (ht-get imgix-params-default-lookup k) v)))
+
 				(if (member k imgix-params-accepts-url)
                   (add-to-list 'qs (concat k "=" (if (imgix-is-url-encoded v)
                                                    v
                                                    (url-hexify-string v))))
+                ;; ;; if param value can be a url then encode it
+                ;; (if (member k imgix-params-accepts-url)
+                ;;   (add-to-list 'qs
+                ;;                (concat k "="
+                ;;                    (if (imgix-is-url-encoded v)
+                ;;                      v
+                ;;                      (url-hexify-string v))))
                   (add-to-list 'qs (concat k "=" v)))))
              lookup)
 
@@ -148,7 +169,7 @@
   (interactive)
   (let* ((parts (imgix-parse-url imgix-buffer-url))
          (qs-lookup (imgix-parse-qs (ht-get parts "query")))
-         (param-title-to-update (ido-completing-read "Select param:" imgix-params-titles))
+         (param-title-to-update (ido-completing-read "Select param:" (imgix-force-front imgix-last-updated-param imgix-params-titles)))
          (param-code-to-update (ht-get imgix-params-code-lookup param-title-to-update))
 
          (cur-param-value (ht-get qs-lookup param-code-to-update))
@@ -157,16 +178,13 @@
 
          (param-value
            (if cur-param-options
-             (progn
-                ;; ensure it's at the start of the list
-                (delete cur-param-value cur-param-options)
-                (add-to-list 'cur-param-options cur-param-value)
-                (ido-completing-read prompt-text (-non-nil cur-param-options)))
+		     (ido-completing-read prompt-text (imgix-force-front cur-param-value cur-param-options))
              (read-from-minibuffer
-               prompt-text (if (member param-code-to-update                                                            imgix-params-accepts-url)
+               prompt-text (if (member param-code-to-update imgix-params-accepts-url)
                              (url-unhex-string cur-param-value)
                              cur-param-value)))))
 
+    (setq imgix-last-updated-param param-title-to-update)
     (ht-set! qs-lookup param-code-to-update param-value)
     (ht-set parts "query" (imgix-build-qs qs-lookup))
     (setq imgix-buffer-url (imgix-build-url parts))
@@ -189,6 +207,7 @@
   (with-current-buffer "*eww*"
     (end-of-buffer)
     (insert (concat "\n" imgix-buffer-url))))))
+
 
 
 ;; start scratch...
