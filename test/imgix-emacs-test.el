@@ -1,0 +1,31 @@
+;;(load "../imgix.el")
+(require 'imgix)
+(require 'ert)
+(require 'ht)
+
+(ert-deftest imgix-simple-build-qs-test ()
+  (let* ((qs (ht-create)))
+    (ht-set! qs "w" "500")
+    (ht-set! qs "h" "700")
+    (should (string= (imgix-build-qs qs)
+                     "h=700&w=500"))))
+
+(ert-deftest imgix-txt-build-qs-test ()
+  (let* ((qs (ht-create)))
+    (ht-set! qs "txt" "hello there")
+    (should (string= (imgix-build-qs qs)
+                     "txt=hello%20there"))))
+
+(ert-deftest imgix-parse-qs-test ()
+  (let* ((parsed (imgix-parse-qs "txt=hello%20there&w=500&h=250")))
+
+    (should (string= (ht-get parsed "w")
+                     "500"))
+    (should (string= (ht-get parsed "h")
+                     "250"))
+    (should (string= (ht-get parsed "txt")
+                     "hello%20there"))))
+
+(ert-deftest imgix-is-url-encoded-test ()
+  (should (not (imgix-is-url-encoded "hello there")))
+  (should (imgix-is-url-encoded "hello%20there")))

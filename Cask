@@ -4,8 +4,7 @@
 (package "imgix" "1.0.0" "blah")
 (package-file "imgix.el")
 
-
-
+(depends-on "ht")
 (depends-on "cask")
 (depends-on "dash")
 (depends-on "f")

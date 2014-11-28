@@ -18,8 +18,9 @@
 (require 'dash)
 
 
+
 (defun ht-flip (to-flip)
-  "Flip keys and values for hash table TO-FLIP."
+ "Flip keys and values for hash table TO-FLIP."
   (let* ((result (ht-create)))
     (ht-map
       (lambda (k v)
@@ -91,19 +92,19 @@
   (let ((json-object-type 'plist))
     (json-read-from-string to-decode)))
 
-(defun imgix-make-combos (list)
-  (if (null list) '(nil)
-    (let* ((a (car list))
-           (d (cdr list))
-           (s (combos d))
-           (v (mapcar (lambda (x) (cons a x)) s)))
-    (append s v))))
+;; (defun imgix-make-combos (list)
+;;   (if (null list) '(nil)
+;;     (let* ((a (car list))
+;;            (d (cdr list))
+;;            (s (combos d))
+;;            (v (mapcar (lambda (x) (cons a x)) s)))
+;;     (append s v))))
 
-(defun imgix-flatten-combos (list)
-  (mapcar
-    (lambda (x)
-      (mapconcat 'identity x ","))
-    (-non-nil list)))
+;; (defun imgix-flatten-combos (list)
+;;   (mapcar
+;;     (lambda (x)
+;;       (mapconcat 'identity x ","))
+;;     (-non-nil list)))
 
 (defun imgix-is-url-encoded (txt)
   "is TXT url encoded"
@@ -115,7 +116,7 @@
          (parts (url-generic-parse-url url))
          (fn-parts (split-string (url-filename parts) "?"))
          (path (car fn-parts))
-         (query (if (eq (length fn-parts) 2) (second fn-parts) "")))
+         (query (if (eq (length fn-parts) 2) (cadr fn-parts) "")))
 
     (ht-set! result "scheme" (url-type parts))
     (ht-set! result "host" (url-host parts))
@@ -168,8 +169,8 @@
 
     (mapc (lambda (p)
             (let ((sides (split-string p "=")))
-              (when (and (first sides) (second sides))
-                (ht-set! parsed (first sides) (second sides)))))
+              (when (and (car sides) (cadr sides))
+                (ht-set! parsed (car sides) (cadr sides)))))
            parts)
      parsed))
 
@@ -213,9 +214,9 @@
   ;; TODO: is there an eww-onload hook???
   (run-at-time "2 sec" nil (lambda ()
   (with-current-buffer "*eww*"
-    (end-of-buffer)
+    ;(end-of-buffer)
+    (goto-char (point-max))
     (insert (concat "\n" imgix-buffer-url))))))
-
 
 
 ;; start scratch...
@@ -226,5 +227,5 @@
 ;; https://github.com/magit/git-modes/blob/master/git-commit-mode.el
 ;; https://github.com/bbatsov/emacs-lisp-style-guide
 
-;(provide 'imgix)
+(provide 'imgix)
 ;;; imgix.el ends here
