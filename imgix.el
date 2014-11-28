@@ -17,8 +17,6 @@
 (require 'ht)
 (require 'dash)
 
-
-
 (defun ht-flip (to-flip)
  "Flip keys and values for hash table TO-FLIP."
   (let* ((result (ht-create)))
@@ -67,17 +65,6 @@
 (defconst imgix-params-titles (ht-values imgix-params-title-lookup))
 (defconst imgix-params-accepts-url '("mark" "mask" "blend" "txt"))
 (defvar imgix-last-updated-param "w")
-;(defvar imgix-params-accepts-multiple '("auto", "markalign", "ba")) ;; others?
-
-;; (setq imgix-buffer-url "http://jackangers.imgix.net/chester.png")
-;; (setq imgix-params-title-lookup (imgix-load-json "data/params.json"))
-;; (setq imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
-;; (setq imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
-;; (setq imgix-params-codes (ht-keys imgix-params-title-lookup))
-;; (setq imgix-params-titles (ht-values imgix-params-title-lookup))
-;; (setq imgix-params-accepts-url '("mark" "mask" "blend" "txt"))
-;(ht-get imgix-params-title-lookup "w")
-;(ht-get imgix-params-default-lookup "w")
 
 ;(type-of (ht-get imgix-params-option-lookup "txtalign"))
 
@@ -104,7 +91,7 @@
 ;;     (-non-nil list)))
 
 (defun imgix-is-url-encoded (txt)
-  "is TXT url encoded"
+  "is TXT url encoded?"
   (and (not (string= txt (url-unhex-string txt)))))
 
 (defun imgix-parse-url (url)
@@ -160,7 +147,7 @@
       "")))
 
 (defun imgix-parse-qs (qs)
-  "Parse a query string into a hash table key=value&key=value"
+  "Parse a query string QS into a hash table key=value&key=value"
   (let* ((parsed (ht-create))
          (parts (split-string qs "&")))
 
@@ -203,18 +190,20 @@
   (setq imgix-buffer-url (read-from-minibuffer "URL: " imgix-buffer-url))
   (imgix-display-image))
 
+(defadvice eww-render (after eww-render-after activate)
+  "After eww-render runs insert the current buffer url"
+  ;; TODO: ensure this only runs when in imgix-mode and NOT always...
+  (with-current-buffer "*eww*"
+    (goto-char (point-max))
+    (insert (concat "\n" imgix-buffer-url))))
+
+
 (defun imgix-display-image ()
   "Display image in emacs browser eww"
   ;;(message (concat "Displaying " imgix-buffer-url))
-  ; (kill-buffer "*eww*")
+  ;(kill-buffer "*eww*")
   (eww-browse-url imgix-buffer-url t)
-  (switch-to-buffer "*eww*")
-  ;; TODO: is there an eww-onload hook???
-  (run-at-time "2 sec" nil (lambda ()
-  (with-current-buffer "*eww*"
-    ;(end-of-buffer)
-    (goto-char (point-max))
-    (insert (concat "\n" imgix-buffer-url))))))
+  (switch-to-buffer "*eww*" nil t))
 
 
 ;; start scratch...
