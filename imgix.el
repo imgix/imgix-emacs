@@ -45,7 +45,7 @@
 
 ;; TODO: move/back and forth undo/redo...?
 ;; TODO: option to to select param menu from full half buffer ( so you can read all options)
-;; TODO: proper major mode
+;; TODO: proper major mode -- see (define-derived-mode
 ;; TODO: override *eww* with *imgix-visor* (get-buffer-create "*eww*")
 ;; TODO: normalize queries
 ;; TODO: melpa for (package-install 'imgix)  !!
