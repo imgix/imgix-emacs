@@ -4,7 +4,7 @@
 
 ;; Author: imgix
 ;; Version: 1.0
-;; Keywords: images, blur
+;; Keywords: images, image processing, image editing, sepia, blur
 
 ;;; package --- Summary
 
@@ -41,7 +41,6 @@
 	(imgix-json-decode-hash (imgix-get-file-contents data-path)))
 
 
-;; TODO: tests
 ;; TODO: move/back and forth undo/redo...?
 ;; TODO: option to to select param menu from full half buffer ( so you can read all options)
 ;; TODO: proper major mode

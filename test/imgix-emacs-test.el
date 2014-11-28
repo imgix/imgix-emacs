@@ -1,4 +1,3 @@
-;;(load "../imgix.el")
 (require 'imgix)
 (require 'ert)
 (require 'ht)
@@ -29,3 +28,19 @@
 (ert-deftest imgix-is-url-encoded-test ()
   (should (not (imgix-is-url-encoded "hello there")))
   (should (imgix-is-url-encoded "hello%20there")))
+
+
+(ert-deftest imgix-parse-url-test ()
+  (let* ((url "http://jackangers.imgix.net/chester.png?w=500&h=200&fit=crop")
+         (parsed (imgix-parse-url url)))
+    (should (string= (ht-get parsed "scheme") "http"))
+    (should (string= (ht-get parsed "host") "jackangers.imgix.net"))
+    (should (string= (ht-get parsed "path") "/chester.png"))
+    (should (string= (ht-get parsed "query") "w=500&h=200&fit=crop"))))
+
+
+
+(ert-deftest imgix-build-url-test ()
+  (let* ((url "http://jackangers.imgix.net/chester.png?w=500&h=200&fit=crop")
+         (parsed (imgix-parse-url url)))
+    (should (string= (imgix-build-url parsed) url))))
