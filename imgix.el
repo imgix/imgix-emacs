@@ -1,3 +1,11 @@
+;;; imgix.el --- imgix visor emacs edition
+
+;; Copyright (C) 2014 imgix
+
+;; Author: imgix
+;; Version: 1.0
+;; Keywords: images, blur
+
 ;;; package --- Summary
 
 ;;; Commentary:
@@ -31,19 +39,19 @@
 (defun imgix-load-json (data-path)
 	(imgix-json-decode-hash (imgix-get-file-contents data-path)))
 
-;; TODO: move/back and forth...?
+
+;; TODO: tests
+;; TODO: move/back and forth undo/redo...?
 ;; TODO: option to to select param menu from full half buffer ( so you can read all options)
 ;; TODO: proper major mode
 ;; TODO: override *eww* with *imgix-visor* (get-buffer-create "*eww*")
 ;; TODO: normalize queries
-;; TODO: put json files in data/ dir (or whatever the best practice is)
+
 ;; TODO: melpa for (package-install 'imgix)  !!
-;; TODO: option selection for params that have options like fit/crop/etc
-;; TODO: tests
+
 ;; TODO: special nesting of URLs for blend/mask
 ;; TODO: open url in default browser
 ;; TODO: custom mode line of current url...
-
 ;; TODO: should these be prefixed imgix/ or imgix-- ?
 ;; TODO: s3 uploader / source configuration...?
 
