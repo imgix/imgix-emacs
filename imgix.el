@@ -57,35 +57,33 @@
 
 (setq eww-header-line-format "imgix visor - emacs edition") ;; override default *eww* buffer
 
-(defvar imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=250")
-(defvar imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
-(defvar imgix-params-title-lookup (imgix-load-json "data/params.json"))
-(defvar imgix-params-option-lookup (imgix-load-json "data/param_options.json"))
-;(defvar imgix-params-codes-with-options (ht-keys imgix-params-options-lookup))
-(defvar imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
-(defvar imgix-params-codes (ht-keys imgix-params-title-lookup))
-(defvar imgix-params-titles (ht-values imgix-params-title-lookup))
-(defvar imgix-params-accepts-url '("mark" "mask" "blend" "txt"))
+(defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=250")
+(defconst imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
+(defconst imgix-params-title-lookup (imgix-load-json "data/params.json"))
+(defconst imgix-params-option-lookup (imgix-load-json "data/param_options.json"))
+;(defconst imgix-params-codes-with-options (ht-keys imgix-params-options-lookup))
+(defconst imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
+(defconst imgix-params-codes (ht-keys imgix-params-title-lookup))
+(defconst imgix-params-titles (ht-values imgix-params-title-lookup))
+(defconst imgix-params-accepts-url '("mark" "mask" "blend" "txt"))
 (defvar imgix-last-updated-param "w")
 ;(defvar imgix-params-accepts-multiple '("auto", "markalign", "ba")) ;; others?
 
-(setq imgix-buffer-url "http://jackangers.imgix.net/chester.png")
-(setq imgix-params-title-lookup (imgix-load-json "data/params.json"))
-(setq imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
-(setq imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
-(setq imgix-params-codes (ht-keys imgix-params-title-lookup))
-(setq imgix-params-titles (ht-values imgix-params-title-lookup))
-(setq imgix-params-accepts-url '("mark" "mask" "blend" "txt"))
+;; (setq imgix-buffer-url "http://jackangers.imgix.net/chester.png")
+;; (setq imgix-params-title-lookup (imgix-load-json "data/params.json"))
+;; (setq imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
+;; (setq imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
+;; (setq imgix-params-codes (ht-keys imgix-params-title-lookup))
+;; (setq imgix-params-titles (ht-values imgix-params-title-lookup))
+;; (setq imgix-params-accepts-url '("mark" "mask" "blend" "txt"))
 ;(ht-get imgix-params-title-lookup "w")
 ;(ht-get imgix-params-default-lookup "w")
 
 ;(type-of (ht-get imgix-params-option-lookup "txtalign"))
 
 (defun imgix-force-front (item list)
-   (delete item list)
-   (add-to-list 'list item)
-   (-non-nil list))
-
+  "Force an item to be at the front of a list"
+  (cons item (-non-nil (-remove (lambda (x) (string= x item)) list))))
 
 (defun imgix-json-decode-plist (to-decode)
   (let ((json-object-type 'plist))

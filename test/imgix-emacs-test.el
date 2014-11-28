@@ -41,3 +41,8 @@
   (let* ((url "http://jackangers.imgix.net/chester.png?w=500&h=200&fit=crop")
          (parsed (imgix-parse-url url)))
     (should (string= (imgix-build-url parsed) url))))
+
+(ert-deftest imgix-force-front-test ()
+  (let* ((some-list '("one" "two" "three")))
+    (should (string= (car (imgix-force-front "three" some-list)) "three"))
+    (should (string= (car (imgix-force-front "four" some-list)) "four"))))
