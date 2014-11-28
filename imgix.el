@@ -174,6 +174,7 @@
      parsed))
 
 (defun imgix-update-url-param ()
+  "Update the imgix url params"
   (interactive)
   (let* ((parts (imgix-parse-url imgix-buffer-url))
          (qs-lookup (imgix-parse-qs (ht-get parts "query")))

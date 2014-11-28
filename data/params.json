@@ -58,5 +58,5 @@
 	"auto": "Auto",
 	"mask": "Mask",
 	"bg": "Background",
-	"invert": "Invert"
+	"inv": "Invert"
 }
