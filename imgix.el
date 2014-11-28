@@ -27,16 +27,19 @@
     result))
 
 (defun imgix-get-file-contents (file-path)
+  "Get file contents of file FILE-PATH as string."
   (with-temp-buffer
     (insert-file-contents file-path)
     (buffer-string)))
 
 (defun imgix-json-decode-hash (to-decode)
+  "Get json object string TO-DECODE as a hash table."
   (let ((json-object-type 'hash-table))
     (json-read-from-string to-decode)))
 
 (defun imgix-load-json (data-path)
-	(imgix-json-decode-hash (imgix-get-file-contents data-path)))
+  "Get file of json DATA-PATH as elisp hash table."
+  (imgix-json-decode-hash (imgix-get-file-contents data-path)))
 
 
 ;; TODO: move/back and forth undo/redo...?
@@ -44,9 +47,7 @@
 ;; TODO: proper major mode
 ;; TODO: override *eww* with *imgix-visor* (get-buffer-create "*eww*")
 ;; TODO: normalize queries
-
 ;; TODO: melpa for (package-install 'imgix)  !!
-
 ;; TODO: special nesting of URLs for blend/mask
 ;; TODO: open url in default browser
 ;; TODO: custom mode line of current url...
@@ -59,7 +60,6 @@
 (defconst imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
 (defconst imgix-params-title-lookup (imgix-load-json "data/params.json"))
 (defconst imgix-params-option-lookup (imgix-load-json "data/param_options.json"))
-;(defconst imgix-params-codes-with-options (ht-keys imgix-params-options-lookup))
 (defconst imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
 (defconst imgix-params-codes (ht-keys imgix-params-title-lookup))
 (defconst imgix-params-titles (ht-values imgix-params-title-lookup))
@@ -69,10 +69,11 @@
 ;(type-of (ht-get imgix-params-option-lookup "txtalign"))
 
 (defun imgix-force-front (item list)
-  "Force an item to be at the front of a list"
+  "Force an ITEM to be at the front of a LIST."
   (cons item (-non-nil (-remove (lambda (x) (string= x item)) list))))
 
 (defun imgix-json-decode-plist (to-decode)
+  "Get json object string TO-DECODE as a plist."
   (let ((json-object-type 'plist))
     (json-read-from-string to-decode)))
 
@@ -91,11 +92,11 @@
 ;;     (-non-nil list)))
 
 (defun imgix-is-url-encoded (txt)
-  "is TXT url encoded?"
+  "Is TXT url encoded?"
   (and (not (string= txt (url-unhex-string txt)))))
 
 (defun imgix-parse-url (url)
-  "Parse a url to a hash table via (url-generic-parse-url) but breaking up path and query"
+  "Parse a URL to a hash table via (url-generic-parse-url) but breaking up path and query."
   (let* ((result (ht-create))
          (parts (url-generic-parse-url url))
          (fn-parts (split-string (url-filename parts) "?"))
@@ -132,13 +133,6 @@
                   (add-to-list 'qs (concat k "=" (if (imgix-is-url-encoded v)
                                                    v
                                                    (url-hexify-string v))))
-                ;; ;; if param value can be a url then encode it
-                ;; (if (member k imgix-params-accepts-url)
-                ;;   (add-to-list 'qs
-                ;;                (concat k "="
-                ;;                    (if (imgix-is-url-encoded v)
-                ;;                      v
-                ;;                      (url-hexify-string v))))
                   (add-to-list 'qs (concat k "=" v)))))
              lookup)
 
@@ -147,7 +141,7 @@
       "")))
 
 (defun imgix-parse-qs (qs)
-  "Parse a query string QS into a hash table key=value&key=value"
+  "Parse a query string QS into a hash table key=value&key=value."
   (let* ((parsed (ht-create))
          (parts (split-string qs "&")))
 
@@ -159,7 +153,7 @@
      parsed))
 
 (defun imgix-update-url-param ()
-  "Update the imgix url params"
+  "Prompt user to help update the imgix url's params."
   (interactive)
   (let* ((parts (imgix-parse-url imgix-buffer-url))
          (qs-lookup (imgix-parse-qs (ht-get parts "query")))
@@ -185,13 +179,13 @@
     (imgix-display-image)))
 
 (defun imgix-prompt-buffer-url ()
-  "Prompt the user for a full imgix image url"
+  "Prompt the user for a full imgix image url."
   (interactive)
   (setq imgix-buffer-url (read-from-minibuffer "URL: " imgix-buffer-url))
   (imgix-display-image))
 
 (defadvice eww-render (after eww-render-after activate)
-  "After eww-render runs insert the current buffer url"
+  "AFTER eww-render run insert the current buffer url."
   ;; TODO: ensure this only runs when in imgix-mode and NOT always...
   (with-current-buffer "*eww*"
     (goto-char (point-max))
@@ -199,8 +193,7 @@
 
 
 (defun imgix-display-image ()
-  "Display image in emacs browser eww"
-  ;;(message (concat "Displaying " imgix-buffer-url))
+  "Display image in Emacs browser eww."
   ;(kill-buffer "*eww*")
   (eww-browse-url imgix-buffer-url t)
   (switch-to-buffer "*eww*" nil t))

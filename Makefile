@@ -5,7 +5,6 @@ CASK ?= cask
 all: test
 
 test: clean-elc
-	${MAKE} unit
 	${MAKE} compile
 	${MAKE} unit
 	${MAKE} clean-elc
