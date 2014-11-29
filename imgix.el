@@ -45,7 +45,8 @@
 
 ;; TODO: move/back and forth undo/redo...?
 ;; TODO: presets...
-;; TODO: edit base url
+;; TODO: edit base url: C-c C-b
+;; TODO: for url fields remember past fields and have those as options
 ;; TODO: normalize queries
 ;; TODO: melpa for (package-install 'imgix)  !!
 ;; TODO: special nesting of URLs for blend/mask
@@ -71,7 +72,7 @@
 (defconst imgix-params-codes (ht-keys imgix-params-title-lookup))
 (defconst imgix-params-titles (ht-values imgix-params-title-lookup))
 (defconst imgix-params-accepts-url '("mark" "mask" "blend" "txt"))
-(defvar imgix-last-updated-param "w")
+(defvar imgix-last-updated-param "")
 
 ;(type-of (ht-get imgix-params-option-lookup "txtalign"))
 
@@ -230,8 +231,6 @@
   :keymap (imgix-mode-map))
 
 (imgix-overtake-eww)
-;; start scratch...
-;;
 
 ;;;;;REFERENCE:
 
