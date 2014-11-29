@@ -46,7 +46,6 @@
 ;; TODO: move/back and forth undo/redo...?
 ;; TODO: presets...
 ;; TODO: for url fields remember past fields and have those as options
-;; TODO: normalize queries
 ;; TODO: melpa for (package-install 'imgix)  !!
 ;; TODO: special nesting of URLs for blend/mask
 ;; TODO: open url in default browser
@@ -134,7 +133,9 @@
 (defun imgix-build-qs (lookup)
   "Build a URL query string from a hash table LOOKUP"
   (let* ((qs '()))
-    (ht-map (lambda (k v)
+	(mapc (lambda (k)
+            (let ((v (ht-get lookup k)))
+
               ;; if param has a value and its not its default
               (when (and (stringp k) (stringp v)
                          (> (length k) 0) (> (length v) 0)
@@ -144,8 +145,9 @@
                   (add-to-list 'qs (concat k "=" (if (imgix-is-url-encoded v)
                                                    v
                                                    (url-hexify-string v))))
-                  (add-to-list 'qs (concat k "=" v)))))
-             lookup)
+                  (add-to-list 'qs (concat k "=" v))))))
+
+		  (reverse (sort (ht-keys lookup) 'string<)))
 
     (if (> (length qs) 0)
       (mapconcat 'identity qs "&")
