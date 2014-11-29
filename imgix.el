@@ -72,7 +72,7 @@
 (defconst imgix-params-code-lookup (ht-flip imgix-params-title-lookup))
 (defconst imgix-params-codes (ht-keys imgix-params-title-lookup))
 (defconst imgix-params-titles (ht-values imgix-params-title-lookup))
-(defconst imgix-params-accepts-url '("mark" "mask" "blend" "txt"))
+(defconst imgix-params-accepts-url '("mark" "mask" "blend" "txt" "txtfont"))
 (defvar imgix-last-updated-param "")
 
 ;(type-of (ht-get imgix-params-option-lookup "txtalign"))
