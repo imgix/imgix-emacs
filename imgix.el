@@ -10,7 +10,7 @@
 
 ;;; Commentary:
 
-;; A major mode for editing images in emacs via imgix
+;; A minor mode for editing images in emacs via imgix
 
 ;;; Code:
 (require 'json)
@@ -44,9 +44,8 @@
 
 
 ;; TODO: move/back and forth undo/redo...?
-;; TODO: option to to select param menu from full half buffer ( so you can read all options)
-;; TODO: proper major mode -- see (define-derived-mode
-;; TODO: override *eww* with *imgix-visor* (get-buffer-create "*eww*")
+;; TODO: presets...
+;; TODO: edit base url
 ;; TODO: normalize queries
 ;; TODO: melpa for (package-install 'imgix)  !!
 ;; TODO: special nesting of URLs for blend/mask
@@ -54,10 +53,17 @@
 ;; TODO: custom mode line of current url...
 ;; TODO: should these be prefixed imgix/ or imgix-- ?
 ;; TODO: s3 uploader / source configuration...?
+;; TODO: option to to select param menu from full half buffer ( so you can read all options)
 
 (setq eww-header-line-format "imgix visor - emacs edition") ;; override default *eww* buffer
 
-(defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=250")
+(defvar imgix-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-u") 'imgix-update-url-param)
+    (define-key map (kbd "C-c C-e") 'imgix-prompt-buffer-url)
+    map))
+
+(defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png")
 (defconst imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
 (defconst imgix-params-title-lookup (imgix-load-json "data/params.json"))
 (defconst imgix-params-option-lookup (imgix-load-json "data/param_options.json"))
@@ -188,18 +194,42 @@
 (defadvice eww-render (after eww-render-after activate)
   "AFTER eww-render run insert the current buffer url."
   ;; TODO: ensure this only runs when in imgix-mode and NOT always...
+
+  ;(imgix-overtake-eww)
+
+  (if (not (get-buffer-window-list "*eww*"))
+    (switch-to-buffer "*eww*")
+    (previous-buffer))
+
   (with-current-buffer "*eww*"
     (goto-char (point-max))
-    (insert (concat "\n" imgix-buffer-url))))
+    (insert (concat "\n" imgix-buffer-url))
+	(rename-buffer "*imgix*"))
 
+  (if (not (get-buffer-window-list "*imgix*"))
+    (switch-to-buffer "*imgix*")))
+
+
+(defun imgix-overtake-eww ()
+  (when (get-buffer "*imgix*")
+    (with-current-buffer "*imgix*"
+	  (rename-buffer "*eww*"))))
 
 (defun imgix-display-image ()
   "Display image in Emacs browser eww."
   ;(kill-buffer "*eww*")
-  (eww-browse-url imgix-buffer-url t)
-  (switch-to-buffer "*eww*" nil t))
+
+  (imgix-overtake-eww)
+  (eww-browse-url imgix-buffer-url))
 
 
+;;;###autoload
+(define-minor-mode imgix-mode
+  "Minor mode for editing images via imgix"
+  :global t
+  :keymap (imgix-mode-map))
+
+(imgix-overtake-eww)
 ;; start scratch...
 ;;
 
