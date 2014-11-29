@@ -1,0 +1,5 @@
+{
+ "crop": ["h", "w"],
+ "txtalign": ["txt"],
+ "txtpad": ["txt"],
+}
