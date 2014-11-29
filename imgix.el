@@ -77,7 +77,7 @@
 
 (defun imgix-force-front (item list)
   "Force an ITEM to be at the front of a LIST."
-  (cons item (-non-nil (-remove (lambda (x) (string= x item)) list))))
+  (mapcar 'identity (cons item (-non-nil (-remove (lambda (x) (string= x item)) list)))))
 
 (defun imgix-json-decode-plist (to-decode)
   "Get json object string TO-DECODE as a plist."
