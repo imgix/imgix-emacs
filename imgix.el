@@ -45,7 +45,6 @@
 
 ;; TODO: move/back and forth undo/redo...?
 ;; TODO: presets...
-;; TODO: edit base url: C-c C-b
 ;; TODO: for url fields remember past fields and have those as options
 ;; TODO: normalize queries
 ;; TODO: melpa for (package-install 'imgix)  !!
@@ -63,6 +62,7 @@
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-u") 'imgix-update-url-param)
     (define-key map (kbd "C-c C-e") 'imgix-prompt-buffer-url)
+    (define-key map (kbd "C-c C-b") 'imgix-prompt-buffer-url-base)
     map))
 
 (defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png")
@@ -194,6 +194,22 @@
   (interactive)
   (setq imgix-buffer-url (read-from-minibuffer "URL: " imgix-buffer-url))
   (imgix-display-image))
+
+
+(defun imgix-prompt-buffer-url-base ()
+  "Prompt the user for a new base url while keeping the query string."
+  (interactive)
+  (let* ((parts (split-string imgix-buffer-url "?"))
+         (base-url (car parts))
+         (qs (if (eq (length parts) 2)
+               (cadr parts)
+               ""))
+         (new-base (read-from-minibuffer "Base URL: " base-url)))
+
+  (setq imgix-buffer-url (if (> (length qs) 0)
+                           (concat new-base "?" qs)
+                           new-base))
+  (imgix-display-image)))
 
 (defadvice eww-render (after eww-render-after activate)
   "AFTER eww-render run insert the current buffer url."
