@@ -58,6 +58,7 @@
 
 (setq eww-header-line-format "imgix visor - emacs edition") ;; override default *eww* buffer
 
+;;;###autoload
 (defvar imgix-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-u") 'imgix-update-url-param)
@@ -78,7 +79,9 @@
 
 (defun imgix-force-front (item list)
   "Force an ITEM to be at the front of a LIST."
-  (mapcar 'identity (cons item (-non-nil (-remove (lambda (x) (string= x item)) list)))))
+  (if (not (null item))
+    (mapcar 'identity (cons item (-non-nil (-remove (lambda (x) (string= x item)) list))))
+    list))
 
 (defun imgix-json-decode-plist (to-decode)
   "Get json object string TO-DECODE as a plist."
@@ -228,9 +231,9 @@
 (define-minor-mode imgix-mode
   "Minor mode for editing images via imgix"
   :global t
-  :keymap (imgix-mode-map))
+  :keymap imgix-mode-map)
 
-(imgix-overtake-eww)
+
 
 ;;;;;REFERENCE:
 
