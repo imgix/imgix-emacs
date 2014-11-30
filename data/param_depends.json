@@ -1,6 +1,36 @@
 {
  "fit": ["h", "w"],
  "crop": ["fit", "h", "w"],
+
+ "txtfont": ["txt"],
+ "txtsize": ["txt"],
+ "txtclr": ["txt"],
  "txtalign": ["txt"],
- "txtpad": ["txt"]
+ "txtshad": ["txt"],
+ "txtpad": ["txt"],
+ "txtline": ["txt"],
+ "txtlineclr": ["txt", "txtline"],
+ "txtfit": ["txt"],
+
+ "markw": ["mark"],
+ "markh": ["mark"],
+ "markfit": ["mark"],
+ "markscale": ["mark"],
+ "markalign": ["mark"],
+ "markalpha": ["mark"],
+ "markpad": ["mark"],
+
+ "bw": ["blend"],
+ "bh": ["blend"],
+ "bp": ["blend"],
+ "bf": ["blend"],
+ "ba": ["blend"],
+ "balph": ["blend"],
+ "bm": ["blend"],
+ "bc": ["blend"],
+ "bs": ["blend"],
+
+ "page": ["fm"]
+
+
 }
