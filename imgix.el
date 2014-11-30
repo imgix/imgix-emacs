@@ -65,6 +65,7 @@
     map))
 
 (defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png")
+(defconst imgix-params-depends-lookup (imgix-load-json "data/param_depends.json"))
 (defconst imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
 (defconst imgix-params-title-lookup (imgix-load-json "data/params.json"))
 (defconst imgix-params-option-lookup (imgix-load-json "data/param_options.json"))
@@ -165,29 +166,46 @@
            parts)
      parsed))
 
-(defun imgix-update-url-param ()
-  "Prompt user to help update the imgix url's params."
-  (interactive)
-  (let* ((parts (imgix-parse-url imgix-buffer-url))
-         (qs-lookup (imgix-parse-qs (ht-get parts "query")))
-         (param-title-to-update (ido-completing-read "Select param:" (imgix-force-front imgix-last-updated-param imgix-params-titles)))
-         (param-code-to-update (ht-get imgix-params-code-lookup param-title-to-update))
+(defun imgix-ensure-param-depends-defined (param qs-lookup)
+  (let* ((param-depends (ht-get imgix-params-depends-lookup param)))
+    (when param-depends
+      (mapc (lambda (k)
+              (unless (ht-get qs-lookup k)
+                (imgix--prompt-param-value k qs-lookup nil)))
+        param-depends))))
 
-         (cur-param-value (ht-get qs-lookup param-code-to-update))
-         (cur-param-options (mapcar 'identity (ht-get imgix-params-option-lookup param-code-to-update)))
+(defun imgix--prompt-param-value (param qs-lookup param-depends-check)
+  (interactive)
+  (let* ((cur-param-value (ht-get qs-lookup param))
+         (cur-param-options (mapcar 'identity (ht-get imgix-params-option-lookup param)))
+         (param-title-to-update (ht-get imgix-params-title-lookup param))
          (prompt-text (concat "Value for " param-title-to-update ": "))
 
          (param-value
            (if cur-param-options
 		     (ido-completing-read prompt-text (imgix-force-front cur-param-value cur-param-options))
              (read-from-minibuffer
-               prompt-text (if (member param-code-to-update imgix-params-accepts-url)
+               prompt-text (if (member param imgix-params-accepts-url)
                              (url-unhex-string cur-param-value)
                              cur-param-value)))))
 
-    (setq imgix-last-updated-param param-title-to-update)
-    (ht-set! qs-lookup param-code-to-update param-value)
-    (ht-set parts "query" (imgix-build-qs qs-lookup))
+    (ht-set! qs-lookup param param-value)
+
+	;; prompt for all values of all undefined dependency params..
+	(when param-depends-check
+      (imgix-ensure-param-depends-defined param qs-lookup))
+
+    qs-lookup))
+
+(defun imgix-update-url-param ()
+  "Prompt user to help update the imgix url's params."
+  (interactive)
+  (let* ((parts (imgix-parse-url imgix-buffer-url))
+         (qs-lookup (imgix-parse-qs (ht-get parts "query")))
+         (param-title-to-update (ido-completing-read "Select param:" (imgix-force-front imgix-last-updated-param imgix-params-titles)))
+         (param (ht-get imgix-params-code-lookup param-title-to-update)))
+
+	(ht-set parts "query" (imgix-build-qs (imgix--prompt-param-value param qs-lookup t)))
     (setq imgix-buffer-url (imgix-build-url parts))
     (imgix-display-image)))
 
