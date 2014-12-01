@@ -43,6 +43,7 @@
   (imgix-json-decode-hash (imgix-get-file-contents data-path)))
 
 
+;; TODO: keybinding to launch major-mode from another mode for URL under point..................
 ;; TODO: as proper major-mode - that switches to active imgix if already open...
 ;; TODO: save image to disk interactive func / keybinding
 ;; TODO: easier wait to turn off a param (all lists have "off" -> default value)  - prompt y/n if all depdencies should be removed too if parent is removed
