@@ -43,10 +43,11 @@
   (imgix-json-decode-hash (imgix-get-file-contents data-path)))
 
 
+;; TODO: easier wait to turn off a param (all lists have "off" -> default value)  - prompt y/n if all depdencies should be removed too if parent is removed
 ;; TODO: move/back and forth undo/redo...?
 ;; TODO: presets...
 ;; TODO: docs...
-;; TODO: for url fields remember past fields and have those as options
+;; TODO: for url fields remember past url values and have those as options
 ;; TODO: melpa for (package-install 'imgix)  !!
 ;; TODO: special nesting of URLs for blend/mask
 ;; TODO: open url in default browser
