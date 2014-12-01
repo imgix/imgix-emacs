@@ -45,6 +45,7 @@
 
 ;; TODO: move/back and forth undo/redo...?
 ;; TODO: presets...
+;; TODO: docs...
 ;; TODO: for url fields remember past fields and have those as options
 ;; TODO: melpa for (package-install 'imgix)  !!
 ;; TODO: special nesting of URLs for blend/mask
@@ -58,10 +59,12 @@
 
 ;;;###autoload
 (defvar imgix-mode-map
+;;(setq imgix-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-u") 'imgix-update-url-param)
     (define-key map (kbd "C-c C-e") 'imgix-prompt-buffer-url)
     (define-key map (kbd "C-c C-b") 'imgix-prompt-buffer-url-base)
+    (define-key map (kbd "C-c C-o") 'imgix-open-in-browser)
     map))
 
 (defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png")
@@ -73,7 +76,7 @@
 (defconst imgix-params-codes (ht-keys imgix-params-title-lookup))
 (defconst imgix-params-titles (ht-values imgix-params-title-lookup))
 (defconst imgix-params-accepts-url '("mark" "mask" "blend" "txt" "txtfont"))
-(defvar imgix-last-updated-param "")
+(defvar imgix-last-updated-param nil)
 
 ;(type-of (ht-get imgix-params-option-lookup "txtalign"))
 
@@ -87,20 +90,6 @@
   "Get json object string TO-DECODE as a plist."
   (let ((json-object-type 'plist))
     (json-read-from-string to-decode)))
-
-;; (defun imgix-make-combos (list)
-;;   (if (null list) '(nil)
-;;     (let* ((a (car list))
-;;            (d (cdr list))
-;;            (s (combos d))
-;;            (v (mapcar (lambda (x) (cons a x)) s)))
-;;     (append s v))))
-
-;; (defun imgix-flatten-combos (list)
-;;   (mapcar
-;;     (lambda (x)
-;;       (mapconcat 'identity x ","))
-;;     (-non-nil list)))
 
 (defun imgix-is-url-encoded (txt)
   "Is TXT url encoded?"
@@ -167,19 +156,22 @@
      parsed))
 
 (defun imgix-ensure-param-depends-defined (param qs-lookup)
+  "Ensures PARAM has its dependencies defined in QS-LOOKUP by prompting user."
   (let* ((param-depends (ht-get imgix-params-depends-lookup param)))
     (when param-depends
-      (mapc (lambda (k)
-              (unless (ht-get qs-lookup k)
-                (imgix--prompt-param-value k qs-lookup nil)))
+      (mapc
+        (lambda (k)
+          (unless (ht-get qs-lookup k)
+            (imgix--prompt-param-value k qs-lookup nil)))
         param-depends))))
 
 (defun imgix--prompt-param-value (param qs-lookup param-depends-check)
+  "Prompts user for value of PARAM to set in QS-LOOKUP hash table."
   (interactive)
   (let* ((cur-param-value (ht-get qs-lookup param))
          (cur-param-options (mapcar 'identity (ht-get imgix-params-option-lookup param)))
-         (param-title-to-update (ht-get imgix-params-title-lookup param))
-         (prompt-text (concat "Value for " param-title-to-update ": "))
+         (param-title (ht-get imgix-params-title-lookup param))
+         (prompt-text (concat "Value for " param-title ": "))
 
          (param-value
            (if cur-param-options
@@ -202,8 +194,8 @@
   (interactive)
   (let* ((parts (imgix-parse-url imgix-buffer-url))
          (qs-lookup (imgix-parse-qs (ht-get parts "query")))
-         (param-title-to-update (ido-completing-read "Select param:" (imgix-force-front imgix-last-updated-param imgix-params-titles)))
-         (param (ht-get imgix-params-code-lookup param-title-to-update)))
+         (param-title (ido-completing-read "Select param:" (imgix-force-front imgix-last-updated-param imgix-params-titles)))
+         (param (ht-get imgix-params-code-lookup param-title)))
 
 	(ht-set parts "query" (imgix-build-qs (imgix--prompt-param-value param qs-lookup t)))
     (setq imgix-buffer-url (imgix-build-url parts))
@@ -234,9 +226,6 @@
 (defadvice eww-render (after eww-render-after activate)
   "AFTER eww-render run insert the current buffer url."
   ;; TODO: ensure this only runs when in imgix-mode and NOT always...
-
-  ;(imgix-overtake-eww)
-
   (if (not (get-buffer-window-list "*eww*"))
     (switch-to-buffer "*eww*")
     (previous-buffer))
@@ -255,6 +244,13 @@
     (with-current-buffer "*imgix*"
 	  (rename-buffer "*eww*"))))
 
+(defun imgix-get-base-url ()
+  (car (split-string imgix-buffer-url "?")))
+
+(defun imgix-open-in-browser ()
+  (interactive)
+  (browse-url imgix-buffer-url))
+
 (defun imgix-display-image ()
   "Display image in Emacs browser eww."
   ;(kill-buffer "*eww*")
@@ -262,14 +258,23 @@
   (imgix-overtake-eww)
   (eww-browse-url imgix-buffer-url))
 
+;; (defun imgix-get-url-history ()
+;;   (let ((hist-path (expand-file-name (concat user-emacs-directory "imgix_visor_history"))))
+;;     (if (file-exists-p hist-path)
+;;       (mapcar 'identity (imgix-json-decode-hash (imgix-get-file-contents hist-path)))
+;; 	  '("http://jackangers.imgix.net/chester.png"))))
+
+;; (defun imgix-add-url-history (url)
+  ;; (let ((hist-path (expand-file-name (concat user-emacs-directory "imgix_visor_history"))))
+  ;;   (if (file-exists-p hist-path)
+  ;;     (mapcar 'identity (imgix-json-decode-hash (imgix-get-file-contents hist-path)))
+  ;; 	  '("http://jackangers.imgix.net/chester.png"))))
 
 ;;;###autoload
 (define-minor-mode imgix-mode
   "Minor mode for editing images via imgix"
   :global t
   :keymap imgix-mode-map)
-
-
 
 ;;;;;REFERENCE:
 

@@ -27,7 +27,7 @@
  "ba": ["blend"],
  "balph": ["blend"],
  "bm": ["blend"],
- "bc": ["blend"],
+ "bc": ["blend", "bf"],
  "bs": ["blend"],
 
  "page": ["fm"]
