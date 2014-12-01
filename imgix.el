@@ -43,6 +43,8 @@
   (imgix-json-decode-hash (imgix-get-file-contents data-path)))
 
 
+;; TODO: as proper major-mode - that switches to active imgix if already open...
+;; TODO: save image to disk interactive func / keybinding
 ;; TODO: easier wait to turn off a param (all lists have "off" -> default value)  - prompt y/n if all depdencies should be removed too if parent is removed
 ;; TODO: move/back and forth undo/redo...?
 ;; TODO: presets...
@@ -279,8 +281,10 @@
 
 ;;;;;REFERENCE:
 
+;; https://github.com/emacs-mirror/emacs/blob/ac34b6b2b9aec5bc262ae1f6c54036de11fa44e9/lisp/dired.el#L1960
 ;; https://github.com/magit/git-modes/blob/master/git-commit-mode.el
 ;; https://github.com/bbatsov/emacs-lisp-style-guide
+;; http://stackoverflow.com/questions/14885670/create-new-mode-in-emacs/14887163#14887163
 
 (provide 'imgix)
 ;;; imgix.el ends here
