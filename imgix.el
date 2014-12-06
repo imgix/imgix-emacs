@@ -127,7 +127,7 @@
 (defun imgix-build-qs (lookup)
   "Build a URL query string from a hash table LOOKUP"
   (let* ((qs '()))
-	(mapc (lambda (k)
+    (mapc (lambda (k)
             (let ((v (ht-get lookup k)))
 
               ;; if param has a value and its not its default
@@ -135,13 +135,13 @@
                          (> (length k) 0) (> (length v) 0)
                          (not (string= (ht-get imgix-params-default-lookup k) v)))
 
-				(if (member k imgix-params-accepts-url)
+                (if (member k imgix-params-accepts-url)
                   (add-to-list 'qs (concat k "=" (if (imgix-is-url-encoded v)
                                                    v
                                                    (url-hexify-string v))))
                   (add-to-list 'qs (concat k "=" v))))))
 
-		  (reverse (sort (ht-keys lookup) 'string<)))
+      (reverse (sort (ht-keys lookup) 'string<)))
 
     (if (> (length qs) 0)
       (mapconcat 'identity qs "&")
@@ -179,7 +179,7 @@
 
          (param-value
            (if cur-param-options
-		     (ido-completing-read prompt-text (imgix-force-front cur-param-value cur-param-options))
+             (ido-completing-read prompt-text (imgix-force-front cur-param-value cur-param-options))
              (read-from-minibuffer
                prompt-text (if (member param imgix-params-accepts-url)
                              (url-unhex-string cur-param-value)
@@ -187,8 +187,8 @@
 
     (ht-set! qs-lookup param param-value)
 
-	;; prompt for all values of all undefined dependency params..
-	(when param-depends-check
+    ;; prompt for all values of all undefined dependency params..
+    (when param-depends-check
       (imgix-ensure-param-depends-defined param qs-lookup))
 
     qs-lookup))
@@ -201,7 +201,7 @@
          (param-title (ido-completing-read "Select param:" (imgix-force-front imgix-last-updated-param imgix-params-titles)))
          (param (ht-get imgix-params-code-lookup param-title)))
 
-	(ht-set parts "query" (imgix-build-qs (imgix--prompt-param-value param qs-lookup t)))
+    (ht-set parts "query" (imgix-build-qs (imgix--prompt-param-value param qs-lookup t)))
     (setq imgix-buffer-url (imgix-build-url parts))
     (imgix-display-image)))
 
@@ -237,7 +237,7 @@
   (with-current-buffer "*eww*"
     (goto-char (point-max))
     (insert (concat "\n" imgix-buffer-url))
-	(rename-buffer "*imgix*"))
+    (rename-buffer "*imgix*"))
 
   (if (not (get-buffer-window-list "*imgix*"))
     (switch-to-buffer "*imgix*")))
@@ -246,7 +246,7 @@
 (defun imgix-overtake-eww ()
   (when (get-buffer "*imgix*")
     (with-current-buffer "*imgix*"
-	  (rename-buffer "*eww*"))))
+      (rename-buffer "*eww*"))))
 
 (defun imgix-get-base-url ()
   (car (split-string imgix-buffer-url "?")))
@@ -280,12 +280,22 @@
   :global t
   :keymap imgix-mode-map)
 
+;;(define-derived-mode imgix-mode eww-mode "imgix"
+(defun imgix ()
+  (interactive)
+  (imgix-mode 1)
+  (if (get-buffer "*imgix*")
+    (when (not (get-buffer-window-list "*imgix*"))
+      (switch-to-buffer "*imgix*"))
+    (imgix-display-image)))
+
 ;;;;;REFERENCE:
 
 ;; https://github.com/emacs-mirror/emacs/blob/ac34b6b2b9aec5bc262ae1f6c54036de11fa44e9/lisp/dired.el#L1960
 ;; https://github.com/magit/git-modes/blob/master/git-commit-mode.el
 ;; https://github.com/bbatsov/emacs-lisp-style-guide
 ;; http://stackoverflow.com/questions/14885670/create-new-mode-in-emacs/14887163#14887163
+;; https://github.com/emacs-mirror/emacs/blob/master/lisp/net/eww.el
 
 (provide 'imgix)
 ;;; imgix.el ends here
