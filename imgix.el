@@ -120,7 +120,9 @@
 		  (goto-char start)
           (delete-region start end)
           (insert new-url))
-        (switch-to-buffer buf)))))
+        (switch-to-buffer buf)))
+
+    (setq imgix-inline-edit-state nil)))
 
 ;;;###autoload
 
