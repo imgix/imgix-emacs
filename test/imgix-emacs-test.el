@@ -46,3 +46,11 @@
   (let* ((some-list '("one" "two" "three")))
     (should (string= (car (imgix-force-front "three" some-list)) "three"))
     (should (string= (car (imgix-force-front "four" some-list)) "four"))))
+
+(ert-deftest imgix-is-url-test ()
+  (should (imgix-is-url "http://jackangers.imgix.net/chester.png"))
+  (should (imgix-is-url "http://jackangers.imgix.net/chester.png?w=100&h=200"))
+  (should (not (imgix-is-url "jlkdjaskdfj")))
+  (should (not (imgix-is-url "")))
+  (should (not (imgix-is-url "http://blah.com")))
+  (should (not (imgix-is-url "http://blah"))))

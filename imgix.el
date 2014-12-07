@@ -17,6 +17,7 @@
 (require 'url)
 (require 'ht)
 (require 'dash)
+(require 's)
 
 (defun ht-flip (to-flip)
  "Flip keys and values for hash table TO-FLIP."
@@ -43,7 +44,6 @@
   (imgix-json-decode-hash (imgix-get-file-contents data-path)))
 
 
-;; TODO: keybinding to launch major-mode from another mode for URL under point..................
 ;; TODO: as proper major-mode - that switches to active imgix if already open...
 ;; TODO: easier wait to turn off a param (all lists have "off" -> default value)  - prompt y/n if all depdencies should be removed too if parent is removed
 ;; TODO: move/back and forth undo/redo...?
@@ -53,7 +53,6 @@
 ;; TODO: for url fields remember past url values and have those as options
 ;; TODO: melpa for (package-install 'imgix)  !!
 ;; TODO: special nesting of URLs for blend/mask
-;; TODO: open url in default browser
 ;; TODO: custom mode line of current url...
 ;; TODO: should these be prefixed imgix/ or imgix-- ?
 ;; TODO: s3 uploader / source configuration...?
@@ -93,6 +92,7 @@
 ;(type-of (ht-get imgix-params-option-lookup "txtalign"))
 
 (defun imgix-save-inline-edit-state (start end url buf)
+  "Save the current state for in line editing in imgix."
   (let* ((state (ht-create)))
     (ht-set! state "start" start)
     (ht-set! state "end" end)
@@ -107,6 +107,7 @@
   (imgix--apply-inline-edit imgix-buffer-url))
 
 (defun imgix--apply-inline-edit (new-url)
+  "Finish imgix editing. This replaces selected URL with NEW-URL in that buffer and switches back to it."
   (when imgix-inline-edit-state
     (let* ((start-hash (ht-get imgix-inline-edit-state "hash"))
            (start (ht-get imgix-inline-edit-state "start"))
@@ -130,11 +131,13 @@
 (defun imgix-edit-selected-url (start end)
   "Edit the currently selected URL in imgix."
   (interactive "r")
-  ;(message "start: %d end: %d" start end))
   (let ((url (buffer-substring start end)))
-    (imgix-save-inline-edit-state start end url (current-buffer))
-    (setq imgix-buffer-url url)
-    (imgix-display-image)))
+    (if (imgix-is-url url)
+      (progn
+        (imgix-save-inline-edit-state start end url (current-buffer))
+        (setq imgix-buffer-url url)
+        (imgix-display-image))
+      (message "Selected text is NOT a URL."))))
 
 (defun imgix-force-front (item list)
   "Force an ITEM to be at the front of a LIST."
@@ -164,6 +167,13 @@
     (ht-set! result "path" path)
     (ht-set! result "query" query)
     result))
+
+(defun imgix-is-url (url)
+  (let* ((parsed (imgix-parse-url url))
+         (scheme (ht-get parsed "scheme"))
+         (path (ht-get parsed "path"))
+         (host (ht-get parsed "host")))
+    (and path (> (length path) 0) host scheme (s-contains? "http" scheme))))
 
 (defun imgix-build-url (parts)
   (concat (ht-get parts "scheme") "://"
@@ -300,7 +310,9 @@
     (rename-buffer "*imgix*"))
 
   (if (not (get-buffer-window-list "*imgix*"))
-    (switch-to-buffer "*imgix*")))
+    (switch-to-buffer "*imgix*"))
+
+  (message "Loaded %s" imgix-buffer-url))
 
 
 (defun imgix-overtake-eww ()
@@ -321,6 +333,23 @@
 
   (imgix-overtake-eww)
   (eww-browse-url imgix-buffer-url))
+
+(defun imgix-get-active-minor-modes ()
+  "Give a message of which minor modes are enabled in the current buffer."
+  (interactive)
+  (let ((active-modes))
+    (mapc
+      (lambda (mode)
+         (condition-case nil
+           (if (and (symbolp mode) (symbol-value mode))
+              (add-to-list 'active-modes mode))
+         (error nil) ))
+      minor-mode-list)
+    active-modes))
+
+
+(defun imgix-is-mode-on ()
+  (member 'imgix-mode (imgix-get-active-minor-modes)))
 
 ;; (defun imgix-get-url-history ()
 ;;   (let ((hist-path (expand-file-name (concat user-emacs-directory "imgix_visor_history"))))
