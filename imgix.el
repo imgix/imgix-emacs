@@ -45,11 +45,11 @@
 
 ;; TODO: keybinding to launch major-mode from another mode for URL under point..................
 ;; TODO: as proper major-mode - that switches to active imgix if already open...
-;; TODO: save image to disk interactive func / keybinding
 ;; TODO: easier wait to turn off a param (all lists have "off" -> default value)  - prompt y/n if all depdencies should be removed too if parent is removed
 ;; TODO: move/back and forth undo/redo...?
 ;; TODO: presets...
 ;; TODO: docs...
+;; TODO; help bindngs on h and "?"
 ;; TODO: for url fields remember past url values and have those as options
 ;; TODO: melpa for (package-install 'imgix)  !!
 ;; TODO: special nesting of URLs for blend/mask
@@ -65,10 +65,17 @@
 (defvar imgix-mode-map
 ;;(setq imgix-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-u") 'imgix-update-url-param)
-    (define-key map (kbd "C-c C-e") 'imgix-prompt-buffer-url)
-    (define-key map (kbd "C-c C-b") 'imgix-prompt-buffer-url-base)
-    (define-key map (kbd "C-c C-o") 'imgix-open-in-browser)
+    ;; (define-key map (kbd "C-c C-u") 'imgix-update-url-param)
+    ;; (define-key map (kbd "C-c C-e") 'imgix-prompt-buffer-url)
+    ;; (define-key map (kbd "C-c C-b") 'imgix-prompt-buffer-url-base)
+    ;; (define-key map (kbd "C-c C-o") 'imgix-open-in-browser)
+
+    (define-key map (kbd "u") 'imgix-update-url-param)
+    (define-key map (kbd "e") 'imgix-prompt-buffer-url)
+    (define-key map (kbd "b") 'imgix-prompt-buffer-url-base)
+    (define-key map (kbd "o") 'imgix-open-in-browser)
+    (define-key map (kbd "s") 'imgix-save-url)
+    (define-key map (kbd "d") 'imgix-apply-inline-edit)
     map))
 
 (defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png")
@@ -80,9 +87,52 @@
 (defconst imgix-params-codes (ht-keys imgix-params-title-lookup))
 (defconst imgix-params-titles (ht-values imgix-params-title-lookup))
 (defconst imgix-params-accepts-url '("mark" "mask" "blend" "txt" "txtfont"))
+(defvar imgix-inline-edit-state nil)
 (defvar imgix-last-updated-param nil)
 
 ;(type-of (ht-get imgix-params-option-lookup "txtalign"))
+
+(defun imgix-save-inline-edit-state (start end url buf)
+  (let* ((state (ht-create)))
+    (ht-set! state "start" start)
+    (ht-set! state "end" end)
+    (ht-set! state "url" url)
+    (ht-set! state "buffer" buf)
+    (ht-set! state "hash" (with-current-buffer buf
+                            (md5 (buffer-string))))
+	(setq imgix-inline-edit-state state)))
+
+(defun imgix-apply-inline-edit ()
+  (interactive)
+  (imgix--apply-inline-edit imgix-buffer-url))
+
+(defun imgix--apply-inline-edit (new-url)
+  (when imgix-inline-edit-state
+    (let* ((start-hash (ht-get imgix-inline-edit-state "hash"))
+           (start (ht-get imgix-inline-edit-state "start"))
+           (end (ht-get imgix-inline-edit-state "end"))
+           (buf (ht-get imgix-inline-edit-state "buffer"))
+           (cur-hash (with-current-buffer buf
+                            (md5 (buffer-string)))))
+
+      (when (string= start-hash cur-hash)
+		(with-current-buffer buf
+		  (goto-char start)
+          (delete-region start end)
+          (insert new-url))
+        (switch-to-buffer buf)))))
+
+;;;###autoload
+
+;; TODO: valid URL check...
+(defun imgix-edit-selected-url (start end)
+  "Edit the currently selected URL in imgix."
+  (interactive "r")
+  ;(message "start: %d end: %d" start end))
+  (let ((url (buffer-substring start end)))
+    (imgix-save-inline-edit-state start end url (current-buffer))
+    (setq imgix-buffer-url url)
+    (imgix-display-image)))
 
 (defun imgix-force-front (item list)
   "Force an ITEM to be at the front of a LIST."
@@ -198,12 +248,19 @@
   (interactive)
   (let* ((parts (imgix-parse-url imgix-buffer-url))
          (qs-lookup (imgix-parse-qs (ht-get parts "query")))
-         (param-title (ido-completing-read "Select param:" (imgix-force-front imgix-last-updated-param imgix-params-titles)))
+         (param-title (ido-completing-read "Select Param:" (imgix-force-front imgix-last-updated-param imgix-params-titles)))
          (param (ht-get imgix-params-code-lookup param-title)))
 
     (ht-set parts "query" (imgix-build-qs (imgix--prompt-param-value param qs-lookup t)))
     (setq imgix-buffer-url (imgix-build-url parts))
     (imgix-display-image)))
+
+
+(defun imgix-save-url ()
+  "Save the current URL to file. Prompt for save path."
+  (interactive)
+  (url-copy-file imgix-buffer-url (read-file-name "Save image to: " (expand-file-name "~"))))
+
 
 (defun imgix-prompt-buffer-url ()
   "Prompt the user for a full imgix image url."
@@ -220,7 +277,7 @@
          (qs (if (eq (length parts) 2)
                (cadr parts)
                ""))
-         (new-base (read-from-minibuffer "Base URL: " base-url)))
+         (new-base (read-from-minibuffer "New Base URL: " base-url)))
 
   (setq imgix-buffer-url (if (> (length qs) 0)
                            (concat new-base "?" qs)
@@ -230,6 +287,7 @@
 (defadvice eww-render (after eww-render-after activate)
   "AFTER eww-render run insert the current buffer url."
   ;; TODO: ensure this only runs when in imgix-mode and NOT always...
+  (imgix-mode 1)
   (if (not (get-buffer-window-list "*eww*"))
     (switch-to-buffer "*eww*")
     (previous-buffer))
@@ -277,17 +335,20 @@
 ;;;###autoload
 (define-minor-mode imgix-mode
   "Minor mode for editing images via imgix"
-  :global t
+  ;:global t
   :keymap imgix-mode-map)
 
 ;;(define-derived-mode imgix-mode eww-mode "imgix"
 (defun imgix ()
   (interactive)
-  (imgix-mode 1)
+
   (if (get-buffer "*imgix*")
     (when (not (get-buffer-window-list "*imgix*"))
-      (switch-to-buffer "*imgix*"))
+      (switch-to-buffer "*imgix*")
+	  (imgix-mode 1))
     (imgix-display-image)))
+
+(global-set-key (kbd "C-c C-u") 'imgix-edit-selected-url)
 
 ;;;;;REFERENCE:
 
