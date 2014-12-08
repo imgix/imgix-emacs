@@ -1,4 +1,4 @@
-;;; imgix.el --- imgix visor emacs edition
+;;; imgix.el --- imgix image url editor
 
 ;; Copyright (C) 2014 imgix
 
@@ -43,7 +43,7 @@
   "Get file of json DATA-PATH as elisp hash table."
   (imgix-json-decode-hash (imgix-get-file-contents data-path)))
 
-(setq eww-header-line-format "imgix visor - emacs edition") ;; override default *eww* buffer
+(setq eww-header-line-format "imgix") ;; override default *eww* buffer
 
 ;;;###autoload
 (defvar imgix-mode-map
@@ -88,22 +88,24 @@
 
 (defun imgix--apply-inline-edit (new-url)
   "Finish imgix editing. This replaces selected URL with NEW-URL in that buffer and switches back to it."
-  (when imgix-inline-edit-state
-    (let* ((start-hash (ht-get imgix-inline-edit-state "hash"))
-           (start (ht-get imgix-inline-edit-state "start"))
-           (end (ht-get imgix-inline-edit-state "end"))
-           (buf (ht-get imgix-inline-edit-state "buffer"))
-           (cur-hash (with-current-buffer buf
-                            (md5 (buffer-string)))))
+  (if imgix-inline-edit-state
+    (progn
+      (let* ((start-hash (ht-get imgix-inline-edit-state "hash"))
+             (start (ht-get imgix-inline-edit-state "start"))
+             (end (ht-get imgix-inline-edit-state "end"))
+             (buf (ht-get imgix-inline-edit-state "buffer"))
+             (cur-hash (with-current-buffer buf
+                              (md5 (buffer-string)))))
 
-      (when (string= start-hash cur-hash)
-		(with-current-buffer buf
-		  (goto-char start)
-          (delete-region start end)
-          (insert new-url))
-        (switch-to-buffer buf)))
+        (when (string= start-hash cur-hash)
+           (with-current-buffer buf
+            (goto-char start)
+            (delete-region start end)
+            (insert new-url))
+          (switch-to-buffer buf)))
 
-    (setq imgix-inline-edit-state nil)))
+      (setq imgix-inline-edit-state nil))
+     (message "No inline edit to apply.")))
 
 ;;;###autoload
 
@@ -365,6 +367,7 @@
     (imgix-display-image)))
 
 (global-set-key (kbd "C-c C-u") 'imgix-edit-selected-url)
+(global-set-key (kbd "C-c C-i") 'imgix)
 
 ;;;;;REFERENCE:
 
