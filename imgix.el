@@ -43,32 +43,12 @@
   "Get file of json DATA-PATH as elisp hash table."
   (imgix-json-decode-hash (imgix-get-file-contents data-path)))
 
-
-;; TODO: as proper major-mode - that switches to active imgix if already open...
-;; TODO: easier wait to turn off a param (all lists have "off" -> default value)  - prompt y/n if all depdencies should be removed too if parent is removed
-;; TODO: move/back and forth undo/redo...?
-;; TODO: presets...
-;; TODO: docs...
-;; TODO; help bindngs on h and "?"
-;; TODO: for url fields remember past url values and have those as options
-;; TODO: melpa for (package-install 'imgix)  !!
-;; TODO: special nesting of URLs for blend/mask
-;; TODO: custom mode line of current url...
-;; TODO: should these be prefixed imgix/ or imgix-- ?
-;; TODO: s3 uploader / source configuration...?
-;; TODO: option to to select param menu from full half buffer ( so you can read all options)
-
 (setq eww-header-line-format "imgix visor - emacs edition") ;; override default *eww* buffer
 
 ;;;###autoload
 (defvar imgix-mode-map
 ;;(setq imgix-mode-map
   (let ((map (make-sparse-keymap)))
-    ;; (define-key map (kbd "C-c C-u") 'imgix-update-url-param)
-    ;; (define-key map (kbd "C-c C-e") 'imgix-prompt-buffer-url)
-    ;; (define-key map (kbd "C-c C-b") 'imgix-prompt-buffer-url-base)
-    ;; (define-key map (kbd "C-c C-o") 'imgix-open-in-browser)
-
     (define-key map (kbd "u") 'imgix-update-url-param)
     (define-key map (kbd "e") 'imgix-prompt-buffer-url)
     (define-key map (kbd "b") 'imgix-prompt-buffer-url-base)
@@ -241,13 +221,18 @@
 
          (param-value
            (if cur-param-options
-             (ido-completing-read prompt-text (imgix-force-front cur-param-value cur-param-options))
+             (ido-completing-read prompt-text (imgix-force-front cur-param-value (append '("off") cur-param-options)))
              (read-from-minibuffer
                prompt-text (if (member param imgix-params-accepts-url)
                              (url-unhex-string cur-param-value)
                              cur-param-value)))))
 
-    (ht-set! qs-lookup param param-value)
+
+
+
+    (ht-set! qs-lookup param (if (string= param-value "off")
+                               (ht-get imgix-params-default-lookup param)
+                               param-value))
 
     ;; prompt for all values of all undefined dependency params..
     (when param-depends-check
