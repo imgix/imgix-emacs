@@ -53,7 +53,7 @@
     (define-key map (kbd "e") 'imgix-prompt-buffer-url)
     (define-key map (kbd "b") 'imgix-prompt-buffer-url-base)
     (define-key map (kbd "o") 'imgix-open-in-browser)
-    (define-key map (kbd "s") 'imgix-save-url)
+    (define-key map (kbd "s") 'imgix-save-image)
     (define-key map (kbd "d") 'imgix-apply-inline-edit)
     map))
 
@@ -255,7 +255,7 @@
     (imgix-display-image)))
 
 
-(defun imgix-save-url ()
+(defun imgix-save-image ()
   "Save the current URL to file. Prompt for save path."
   (interactive)
   (url-copy-file imgix-buffer-url (read-file-name "Save image to: " (expand-file-name "~"))))
@@ -338,18 +338,6 @@
 (defun imgix-is-mode-on ()
   (member 'imgix-mode (imgix-get-active-minor-modes)))
 
-;; (defun imgix-get-url-history ()
-;;   (let ((hist-path (expand-file-name (concat user-emacs-directory "imgix_visor_history"))))
-;;     (if (file-exists-p hist-path)
-;;       (mapcar 'identity (imgix-json-decode-hash (imgix-get-file-contents hist-path)))
-;; 	  '("http://jackangers.imgix.net/chester.png"))))
-
-;; (defun imgix-add-url-history (url)
-  ;; (let ((hist-path (expand-file-name (concat user-emacs-directory "imgix_visor_history"))))
-  ;;   (if (file-exists-p hist-path)
-  ;;     (mapcar 'identity (imgix-json-decode-hash (imgix-get-file-contents hist-path)))
-  ;; 	  '("http://jackangers.imgix.net/chester.png"))))
-
 ;;;###autoload
 (define-minor-mode imgix-mode
   "Minor mode for editing images via imgix"
@@ -363,7 +351,7 @@
   (if (get-buffer "*imgix*")
     (when (not (get-buffer-window-list "*imgix*"))
       (switch-to-buffer "*imgix*")
-	  (imgix-mode 1))
+      (imgix-mode 1))
     (imgix-display-image)))
 
 (global-set-key (kbd "C-c C-u") 'imgix-edit-selected-url)
