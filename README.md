@@ -1,18 +1,12 @@
 imgix-emacs
 ===========
 
-An emacs package for easily, and visually, editing images via [imgix](http://www.imgix.com). You can then easily use the imgix URL in your code or write the imgix to disk.
+An emacs package for easily, and visually, editing images via [imgix](http://www.imgix.com). You can then easily use the imgix URL in your code or save the image.
 
-* [Why](#why)
+
 * [Dependencies](#dependencies)
 * [Installation](#install)
 * [Getting Started](#getting-started)
-
-<a name="why"></a>
-Why?
-----
-
-** TODO **
 
 <a name="dependencies"></a>
 Dependencies
