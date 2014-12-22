@@ -102,8 +102,6 @@
      (message "No inline edit to apply.")))
 
 ;;;###autoload
-
-;; TODO: valid URL check...
 (defun imgix-edit-selected-url (start end)
   "Edit the currently selected URL in imgix."
   (interactive "r")
@@ -114,6 +112,13 @@
         (setq imgix-buffer-url url)
         (imgix-display-image))
       (message "Selected text is NOT a URL."))))
+
+;;;###autoload
+(defun imgix-edit-url-at-point ()
+  "Edit the URL currently under point in imgix"
+  (interactive)
+  (let ((url-bounds (bounds-of-thing-at-point 'url)))
+    (imgix-edit-selected-url (car url-bounds) (cdr url-bounds))))
 
 (defun imgix-force-front (item list)
   "Force an ITEM to be at the front of a LIST."
