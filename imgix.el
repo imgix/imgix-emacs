@@ -220,7 +220,6 @@
          (cur-param-options (mapcar 'identity (ht-get imgix-params-option-lookup param)))
          (param-title (ht-get imgix-params-title-lookup param))
          (prompt-text (concat "Value for " param-title ": "))
-
          (param-value
            (if cur-param-options
              (ido-completing-read prompt-text (imgix-force-front cur-param-value (append '("off") cur-param-options)))
@@ -228,9 +227,6 @@
                prompt-text (if (member param imgix-params-accepts-url)
                              (url-unhex-string cur-param-value)
                              cur-param-value)))))
-
-
-
 
     (ht-set! qs-lookup param (if (string= param-value "off")
                                (ht-get imgix-params-default-lookup param)
@@ -251,9 +247,9 @@
          (param (ht-get imgix-params-code-lookup param-title)))
 
     (ht-set parts "query" (imgix-build-qs (imgix--prompt-param-value param qs-lookup t)))
+    (setq imgix-last-updated-param param-title)
     (setq imgix-buffer-url (imgix-build-url parts))
     (imgix-display-image)))
-
 
 (defun imgix-save-image ()
   "Save the current URL to file. Prompt for save path."
@@ -318,6 +314,8 @@
   "Display image in Emacs browser eww."
   ;(kill-buffer "*eww*")
 
+  (when (s-ends-with? "?" imgix-buffer-url)
+    (setq imgix-buffer-url (s-replace "?" "" imgix-buffer-url)))
   (imgix-overtake-eww)
   (eww-browse-url imgix-buffer-url))
 
@@ -342,6 +340,7 @@
 (define-minor-mode imgix-mode
   "Minor mode for editing images via imgix"
   ;:global t
+  :lighter "-imgix"
   :keymap imgix-mode-map)
 
 ;;(define-derived-mode imgix-mode eww-mode "imgix"
