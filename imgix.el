@@ -309,7 +309,6 @@
 
 (defun imgix-display-mode-keymap ()
   "Define keymap for `imgix-display-mode'."
-
   (define-key imgix-display-mode-map (kbd "u") 'imgix-update-url-param)
   (define-key imgix-display-mode-map (kbd "e") 'imgix-prompt-buffer-url)
   (define-key imgix-display-mode-map (kbd "b") 'imgix-prompt-buffer-url-base)
@@ -318,18 +317,29 @@
   (define-key imgix-display-mode-map (kbd "d") 'imgix-apply-inline-edit))
 
 
+;; TODO: dynamically build font-locks
+
+;; (setq imgix-font-lock-funcs (s-join "\\|" (-sort '(lambda (x y) (< (length x) (length y))) (mapcar (lambda (x) (concat x "=")) imgix-params-codes))))
+;; (setq imgix-display-mode-font-lock-keywords '((imgix-font-lock-funcs  .  font-lock-function-name-face)
+;;                                               ("?\\|&" . font-lock-constant-face)))
+;; (font-lock-add-keywords nil '(imgix-display-mode-font-lock-keywords))
+
 (define-derived-mode imgix-display-mode
   fundamental-mode "imgix-display-mode"
   "Edit images via imgix"
   (imgix-display-mode-keymap)
+
+  (font-lock-add-keywords nil '(("inv=\\|bg=\\|mask=\\|auto=\\|colors=\\|class=\\|palette=\\|markpad=\\|markalpha=\\|markalign=\\|markscale=\\|markfit=\\|markh=\\|markw=\\|mark=\\|q=\\|fm=\\|txtfit=\\|txtlineclr=\\|txtline=\\|txtpad=\\|txtshad=\\|txtalign=\\|txtclr=\\|txtsize=\\|txtfont=\\|txt=\\|bs=\\|bc=\\|bm=\\|balph=\\|ba=\\|bf=\\|bp=\\|bh=\\|bw=\\|blend=\\|px=\\|mono=\\|blur=\\|htn=\\|sepia=\\|sharp=\\|vib=\\|gam=\\|shad=\\|high=\\|exp=\\|con=\\|bri=\\|sat=\\|hue=\\|dpr=\\|or=\\|flip=\\|rot=\\|w=\\|h=\\|fit=\\|crop=" . font-lock-function-name-face)))
+
   (message "imgix-display-mode enabled"))
 
 (defun imgix ()
   (interactive)
   (imgix-display-image))
 
+
 (global-set-key (kbd "C-c C-u") 'imgix-edit-selected-url)
-(global-set-key (kbd "C-c C-i") 'imgix)
+(global-set-key (kbd "C-c C-e") 'imgix)
 
 ;;;;;REFERENCE:
 
