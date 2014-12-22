@@ -10,7 +10,7 @@
 
 ;;; Commentary:
 
-;; A minor mode for editing images in emacs via imgix
+;; A major mode for editing images in emacs via imgix
 
 ;;; Code:
 (require 'json)
@@ -18,6 +18,13 @@
 (require 'ht)
 (require 'dash)
 (require 's)
+(require 'shr)
+(require 'browse-url)
+
+(defgroup imgix nil
+  "Use imgix to edit files in emacs via imgix."
+  :prefix "imgix-"
+  :group 'multimedia)
 
 (defun ht-flip (to-flip)
  "Flip keys and values for hash table TO-FLIP."
@@ -43,21 +50,8 @@
   "Get file of json DATA-PATH as elisp hash table."
   (imgix-json-decode-hash (imgix-get-file-contents data-path)))
 
-(setq eww-header-line-format "imgix") ;; override default *eww* buffer
 
-;;;###autoload
-(defvar imgix-mode-map
-;;(setq imgix-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "u") 'imgix-update-url-param)
-    (define-key map (kbd "e") 'imgix-prompt-buffer-url)
-    (define-key map (kbd "b") 'imgix-prompt-buffer-url-base)
-    (define-key map (kbd "o") 'imgix-open-in-browser)
-    (define-key map (kbd "s") 'imgix-save-image)
-    (define-key map (kbd "d") 'imgix-apply-inline-edit)
-    map))
-
-(defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png")
+(defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=200")
 (defconst imgix-params-depends-lookup (imgix-load-json "data/param_depends.json"))
 (defconst imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
 (defconst imgix-params-title-lookup (imgix-load-json "data/params.json"))
@@ -279,30 +273,6 @@
                            new-base))
   (imgix-display-image)))
 
-(defadvice eww-render (after eww-render-after activate)
-  "AFTER eww-render run insert the current buffer url."
-  ;; TODO: ensure this only runs when in imgix-mode and NOT always...
-  (imgix-mode 1)
-  (if (not (get-buffer-window-list "*eww*"))
-    (switch-to-buffer "*eww*")
-    (previous-buffer))
-
-  (with-current-buffer "*eww*"
-    (goto-char (point-max))
-    (insert (concat "\n" imgix-buffer-url))
-    (rename-buffer "*imgix*"))
-
-  (if (not (get-buffer-window-list "*imgix*"))
-    (switch-to-buffer "*imgix*"))
-
-  (message "Loaded %s" imgix-buffer-url))
-
-
-(defun imgix-overtake-eww ()
-  (when (get-buffer "*imgix*")
-    (with-current-buffer "*imgix*"
-      (rename-buffer "*eww*"))))
-
 (defun imgix-get-base-url ()
   (car (split-string imgix-buffer-url "?")))
 
@@ -310,48 +280,53 @@
   (interactive)
   (browse-url imgix-buffer-url))
 
-(defun imgix-display-image ()
-  "Display image in Emacs browser eww."
-  ;(kill-buffer "*eww*")
+(defun imgix-insert-url (url)
+;  (read-only-mode nil)
+  (erase-buffer)
+  (insert (format "%s\n" url))
+  (let ((shr-table-depth 1)) ;; hack to not get shr keymap to load
+    (shr-tag-img nil url))
+  (goto-char 0)
+  (message "Loaded %s" url))
+ ; (read-only-mode t))
 
+
+(defun imgix-display-image ()
+  "Display image in *imgix* buffer."
+  (get-buffer-create "*imgix*")
+  (when (not (get-buffer-window-list "*imgix*"))
+    (switch-to-buffer "*imgix*"))
+  (imgix-display-mode)
   (when (s-ends-with? "?" imgix-buffer-url)
     (setq imgix-buffer-url (s-replace "?" "" imgix-buffer-url)))
-  (imgix-overtake-eww)
-  (eww-browse-url imgix-buffer-url))
+  (with-current-buffer "*imgix*"
+    (setq buffer-read-only t)
+    (let ((inhibit-read-only t))
+      (imgix-insert-url imgix-buffer-url))))
 
-(defun imgix-get-active-minor-modes ()
-  "Give a message of which minor modes are enabled in the current buffer."
-  (interactive)
-  (let ((active-modes))
-    (mapc
-      (lambda (mode)
-         (condition-case nil
-           (if (and (symbolp mode) (symbol-value mode))
-              (add-to-list 'active-modes mode))
-         (error nil) ))
-      minor-mode-list)
-    active-modes))
+(defvar imgix-display-mode-map (make-sparse-keymap)
+  "Keymap for `imgix-display-mode'.")
+
+(defun imgix-display-mode-keymap ()
+  "Define keymap for `imgix-display-mode'."
+
+  (define-key imgix-display-mode-map (kbd "u") 'imgix-update-url-param)
+  (define-key imgix-display-mode-map (kbd "e") 'imgix-prompt-buffer-url)
+  (define-key imgix-display-mode-map (kbd "b") 'imgix-prompt-buffer-url-base)
+  (define-key imgix-display-mode-map (kbd "o") 'imgix-open-in-browser)
+  (define-key imgix-display-mode-map (kbd "s") 'imgix-save-image)
+  (define-key imgix-display-mode-map (kbd "d") 'imgix-apply-inline-edit))
 
 
-(defun imgix-is-mode-on ()
-  (member 'imgix-mode (imgix-get-active-minor-modes)))
+(define-derived-mode imgix-display-mode
+  fundamental-mode "imgix-display-mode"
+  "Edit images via imgix"
+  (imgix-display-mode-keymap)
+  (message "imgix-display-mode enabled"))
 
-;;;###autoload
-(define-minor-mode imgix-mode
-  "Minor mode for editing images via imgix"
-  ;:global t
-  :lighter "-imgix"
-  :keymap imgix-mode-map)
-
-;;(define-derived-mode imgix-mode eww-mode "imgix"
 (defun imgix ()
   (interactive)
-
-  (if (get-buffer "*imgix*")
-    (when (not (get-buffer-window-list "*imgix*"))
-      (switch-to-buffer "*imgix*")
-      (imgix-mode 1))
-    (imgix-display-image)))
+  (imgix-display-image))
 
 (global-set-key (kbd "C-c C-u") 'imgix-edit-selected-url)
 (global-set-key (kbd "C-c C-i") 'imgix)
