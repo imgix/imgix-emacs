@@ -322,19 +322,20 @@
   (define-key imgix-display-mode-map (kbd "d") 'imgix-apply-inline-edit))
 
 
-;; TODO: dynamically build font-locks
-
-;; (setq imgix-font-lock-funcs (s-join "\\|" (-sort '(lambda (x y) (< (length x) (length y))) (mapcar (lambda (x) (concat x "=")) imgix-params-codes))))
-;; (setq imgix-display-mode-font-lock-keywords '((imgix-font-lock-funcs  .  font-lock-function-name-face)
-;;                                               ("?\\|&" . font-lock-constant-face)))
-;; (font-lock-add-keywords nil '(imgix-display-mode-font-lock-keywords))
+(defvar imgix-font-lock-funcs
+  (s-join "\\|" (-sort '(lambda (x y) (> (length x) (length y)))
+                        (mapcar (lambda (x) (concat x "=")) imgix-params-codes)))
+  "Dynamically genereted imgix funcs for font locking.")
 
 (define-derived-mode imgix-display-mode
   fundamental-mode "imgix-display-mode"
   "Edit images via imgix"
   (imgix-display-mode-keymap)
 
-  (font-lock-add-keywords nil '(("inv=\\|bg=\\|mask=\\|auto=\\|colors=\\|class=\\|palette=\\|markpad=\\|markalpha=\\|markalign=\\|markscale=\\|markfit=\\|markh=\\|markw=\\|mark=\\|q=\\|fm=\\|txtfit=\\|txtlineclr=\\|txtline=\\|txtpad=\\|txtshad=\\|txtalign=\\|txtclr=\\|txtsize=\\|txtfont=\\|txt=\\|bs=\\|bc=\\|bm=\\|balph=\\|ba=\\|bf=\\|bp=\\|bh=\\|bw=\\|blend=\\|px=\\|mono=\\|blur=\\|htn=\\|sepia=\\|sharp=\\|vib=\\|gam=\\|shad=\\|high=\\|exp=\\|con=\\|bri=\\|sat=\\|hue=\\|dpr=\\|or=\\|flip=\\|rot=\\|w=\\|h=\\|fit=\\|crop=" . font-lock-function-name-face)))
+  (font-lock-add-keywords nil
+    `((,imgix-font-lock-funcs . font-lock-function-name-face)
+      ("?" . font-lock-builtin-face))
+  'set)
 
   (message "imgix-display-mode enabled"))
 
