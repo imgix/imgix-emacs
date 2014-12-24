@@ -20,6 +20,7 @@
 (require 's)
 (require 'shr)
 (require 'browse-url)
+(require 'pp)
 
 (defgroup imgix nil
   "Use imgix to edit files in emacs via imgix."
@@ -34,6 +35,9 @@
         (ht-set! result v k))
       to-flip)
     result))
+
+(defun imgix-sort-list-str-len (list)
+  (-sort '(lambda (x y) (> (length x) (length y))) list))
 
 (defun imgix-get-file-contents (file-path)
   "Get file contents of file FILE-PATH as string."
@@ -50,7 +54,7 @@
   "Get file of json DATA-PATH as elisp hash table."
   (imgix-json-decode-hash (imgix-get-file-contents data-path)))
 
-
+;TODO assets
 (defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=200")
 (defconst imgix-params-depends-lookup (imgix-load-json "data/param_depends.json"))
 (defconst imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
@@ -64,6 +68,53 @@
 (defvar imgix-last-updated-param nil)
 
 ;(type-of (ht-get imgix-params-option-lookup "txtalign"))
+
+(defstruct imgix-preset "named imgix params" (name "") (params ""))
+
+(defcustom imgix-presets-file
+  (expand-file-name (concat (if (boundp 'user-emacs-directory)
+                                user-emacs-directory
+                              "~/.emacs.d/")
+                            "/imgix.presets.dat"))
+  "Completion history file name."
+  :type 'string
+  :group 'imgix)
+
+(defun imgix-presets-load ()
+  (interactive)
+  (let ((db (if (file-exists-p imgix-presets-file)
+                (ignore-errors
+                  (with-temp-buffer
+                    (insert-file-contents imgix-presets-file)
+                    (goto-char (point-min))
+                    (read (current-buffer)))))))
+    (or db (list))))
+
+(defun imgix-presets-add (name params)
+  (let ((imgix-presets (imgix-presets-load)))
+    (imgix-presets-save (cons (make-imgix-preset :name name :params params) imgix-presets))))
+
+
+(defun imgix-list-preset-names ()
+  (mapcar (lambda (x) (imgix-preset-name x)) (imgix-presets-load)))
+
+;;TODO (defun imgix-apply-preset
+;; (defun imgix-pick-preset)
+
+(defun imgix-presets-save (imgix-presets)
+  (interactive)
+  (ignore-errors
+    (with-temp-buffer
+      (pp imgix-presets (current-buffer))
+      (write-region (point-min) (point-max) imgix-presets-file))))
+
+(defun imgix-presets-get-by-name (name)
+  (car (-filter
+         (lambda (x) (string= (imgix-preset-name x) name))
+         (imgix-presets-load))))
+
+(defun imgix-presets-get-params-by-name (name)
+  (imgix-preset-params (imgix-presets-get-by-name name)))
 
 (defun imgix-save-inline-edit-state (start end url buf)
   "Save the current state for in line editing in imgix."
