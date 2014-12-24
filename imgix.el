@@ -39,6 +39,9 @@
 (defun imgix-sort-list-str-len (list)
   (-sort '(lambda (x y) (> (length x) (length y))) list))
 
+(defun imgix-sort-list-str-len-reverse (list)
+  (-sort '(lambda (x y) (< (length x) (length y))) list))
+
 (defun imgix-get-file-contents (file-path)
   "Get file contents of file FILE-PATH as string."
   (with-temp-buffer
@@ -293,7 +296,8 @@
   (interactive)
   (let* ((parts (imgix-parse-url imgix-buffer-url))
          (qs-lookup (imgix-parse-qs (ht-get parts "query")))
-         (param-title (ido-completing-read "Select Param:" (imgix-force-front imgix-last-updated-param imgix-params-titles)))
+         (param-title-options (imgix-force-front imgix-last-updated-param (imgix-sort-list-str-len-reverse imgix-params-titles)))
+         (param-title (ido-completing-read "Select Param:" param-title-options))
          (param (ht-get imgix-params-code-lookup param-title)))
 
     (ht-set parts "query" (imgix-build-qs (imgix--prompt-param-value param qs-lookup t)))
@@ -374,8 +378,8 @@
 
 
 (defvar imgix-font-lock-funcs
-  (s-join "\\|" (-sort '(lambda (x y) (> (length x) (length y)))
-                        (mapcar (lambda (x) (concat x "=")) imgix-params-codes)))
+  (s-join "\\|" (imgix-sort-list-str-len
+                  (mapcar (lambda (x) (concat x "=")) imgix-params-codes)))
   "Dynamically genereted imgix funcs for font locking.")
 
 (define-derived-mode imgix-display-mode
