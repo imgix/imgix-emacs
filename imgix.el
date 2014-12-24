@@ -37,9 +37,11 @@
     result))
 
 (defun imgix-sort-list-str-len (list)
+  "Sort LIST of strings by length of strings (longest to shortest)."
   (-sort '(lambda (x y) (> (length x) (length y))) list))
 
 (defun imgix-sort-list-str-len-reverse (list)
+  "Sort LIST of strings by length of strings (shortest to longest)."
   (-sort '(lambda (x y) (< (length x) (length y))) list))
 
 (defun imgix-get-file-contents (file-path)
@@ -57,7 +59,7 @@
   "Get file of json DATA-PATH as elisp hash table."
   (imgix-json-decode-hash (imgix-get-file-contents data-path)))
 
-;TODO assets
+;TODO use assets folder instead...
 (defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=200")
 (defconst imgix-params-depends-lookup (imgix-load-json "data/param_depends.json"))
 (defconst imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
@@ -84,6 +86,7 @@
   :group 'imgix)
 
 (defun imgix-presets-load ()
+  "Return list of saved imgix-preset structs."
   (interactive)
   (let ((db (if (file-exists-p imgix-presets-file)
                 (ignore-errors
@@ -94,17 +97,20 @@
     (or db (list))))
 
 (defun imgix-presets-add (name params)
+  "Add imgix-preset NAME to saved list of presets with its PARAMS."
   (let ((imgix-presets (imgix-presets-load)))
     (imgix-presets-save (cons (make-imgix-preset :name name :params params) imgix-presets))))
 
 
 (defun imgix-list-preset-names ()
+  "Return list of the imgix-preset names (for prompting)."
   (mapcar (lambda (x) (imgix-preset-name x)) (imgix-presets-load)))
 
 ;;TODO (defun imgix-apply-preset
 ;; (defun imgix-pick-preset)
 
 (defun imgix-presets-save (imgix-presets)
+  "Save the IMGIX-PRESETS to disk."
   (interactive)
   (ignore-errors
     (with-temp-buffer
@@ -112,15 +118,48 @@
       (write-region (point-min) (point-max) imgix-presets-file))))
 
 (defun imgix-presets-get-by-name (name)
+  "Get preset struct by NAME."
   (car (-filter
          (lambda (x) (string= (imgix-preset-name x) name))
          (imgix-presets-load))))
 
 (defun imgix-presets-get-params-by-name (name)
+  "Get preset params by NAME."
   (imgix-preset-params (imgix-presets-get-by-name name)))
 
+(defun imgix-prompt-preset ()
+  "Prompt for preset and apply params."
+  (interactive)
+  (let* ((preset (ido-completing-read "Select preset: " (imgix-list-preset-names)))
+         (preset-params (imgix-presets-get-params-by-name preset)))
+    (if preset-params
+      (let* ((parts (imgix-parse-url imgix-buffer-url))
+             (cur-params (imgix-get-url-params))
+             (do-override (or (not cur-params) (string= (imgix-prompt-combine-or-override-params) "o"))))
+        (if (and cur-params (not do-override))
+          (ht-set parts "query" (imgix-merge-qs cur-params preset-params))
+          (ht-set parts "query" preset-params))
+
+        (setq imgix-buffer-url (imgix-build-url parts))
+        (imgix-display-image))
+
+      (message "\"%s\" preset not found." preset))))
+
+(defun imgix-merge-qs (qs1 qs2)
+  "Combine two query strings QS1 QS2."
+  (imgix-build-qs
+    (ht-merge (imgix-parse-qs qs1) (imgix-parse-qs qs2))))
+
+(defun imgix-prompt-combine-or-override-params ()
+  "Ask user if existing params should be overriden or combined."
+  (let* ((prompt "Existing params. [O]verride or [C]ombine? ")
+        (result (read-key-sequence prompt)))
+    (if (or (string= result "o") (string= result "c"))
+      result
+      (imgix-prompt-combine-or-override-params))))
+
 (defun imgix-save-inline-edit-state (start end url buf)
-  "Save the current state for in line editing in imgix."
+  "Save the state (START and END of URL and its BUF for in line editing in imgix so we can replace when completed."
   (let* ((state (ht-create)))
     (ht-set! state "start" start)
     (ht-set! state "end" end)
@@ -128,14 +167,14 @@
     (ht-set! state "buffer" buf)
     (ht-set! state "hash" (with-current-buffer buf
                             (md5 (buffer-string))))
-	(setq imgix-inline-edit-state state)))
+    (setq imgix-inline-edit-state state)))
 
 (defun imgix-apply-inline-edit ()
   (interactive)
   (imgix--apply-inline-edit imgix-buffer-url))
 
 (defun imgix--apply-inline-edit (new-url)
-  "Finish imgix editing. This replaces selected URL with NEW-URL in that buffer and switches back to it."
+  "Finish imgix editing.  Replace selected URL with NEW-URL in that buffer and switch back to it."
   (if imgix-inline-edit-state
     (progn
       (let* ((start-hash (ht-get imgix-inline-edit-state "hash"))
@@ -157,7 +196,7 @@
 
 ;;;###autoload
 (defun imgix-edit-selected-url (start end)
-  "Edit the currently selected URL in imgix."
+  "Edit the currently selected URL at START END in imgix mode."
   (interactive "r")
   (let ((url (buffer-substring start end)))
     (if (imgix-is-url url)
@@ -169,7 +208,7 @@
 
 ;;;###autoload
 (defun imgix-edit-url-at-point ()
-  "Edit the URL currently under point in imgix"
+  "Edit the URL currently under point in imgix."
   (interactive)
   (let ((url-bounds (bounds-of-thing-at-point 'url)))
     (imgix-edit-selected-url (car url-bounds) (cdr url-bounds))))
@@ -204,6 +243,7 @@
     result))
 
 (defun imgix-is-url (url)
+  "Is URL formatted like an url?"
   (let* ((parsed (imgix-parse-url url))
          (scheme (ht-get parsed "scheme"))
          (path (ht-get parsed "path"))
@@ -211,6 +251,7 @@
     (and path (> (length path) 0) host scheme (s-contains? "http" scheme))))
 
 (defun imgix-build-url (parts)
+  "Build a url with hash-table of PARTS."
   (concat (ht-get parts "scheme") "://"
           (ht-get parts "host")
           (ht-get parts "path") "?"
@@ -222,7 +263,7 @@
     inp))
 
 (defun imgix-build-qs (lookup)
-  "Build a URL query string from a hash table LOOKUP"
+  "Build a URL query string from a hash table LOOKUP."
   (let* ((qs '()))
     (mapc (lambda (k)
             (let ((v (ht-get lookup k)))
@@ -246,15 +287,18 @@
 
 (defun imgix-parse-qs (qs)
   "Parse a query string QS into a hash table key=value&key=value."
-  (let* ((parsed (ht-create))
-         (parts (split-string qs "&")))
+  (if qs
+    (let* ((parsed (ht-create))
+           (parts (split-string qs "&")))
 
-    (mapc (lambda (p)
-            (let ((sides (split-string p "=")))
-              (when (and (car sides) (cadr sides))
-                (ht-set! parsed (car sides) (cadr sides)))))
-           parts)
-     parsed))
+      (mapc (lambda (p)
+              (let ((sides (split-string p "=")))
+                (when (and (car sides) (cadr sides))
+                  (ht-set! parsed (car sides) (cadr sides)))))
+             parts)
+       parsed)
+     (ht-create)))
+
 
 (defun imgix-ensure-param-depends-defined (param qs-lookup)
   "Ensures PARAM has its dependencies defined in QS-LOOKUP by prompting user."
@@ -333,23 +377,26 @@
                            new-base))
   (imgix-display-image)))
 
-(defun imgix-get-base-url ()
-  (car (split-string imgix-buffer-url "?")))
+;; (defun imgix-get-base-url ()
+;;   (car (split-string imgix-buffer-url "?")))
+
+(defun imgix-get-url-params ()
+  "Get the imgix query string params for the current editing url."
+  (cadr (split-string imgix-buffer-url "?")))
 
 (defun imgix-open-in-browser ()
+  "Open the current *imgix* url in the default browser."
   (interactive)
   (browse-url imgix-buffer-url))
 
 (defun imgix-insert-url (url)
-;  (read-only-mode nil)
+  "Insert viewable image URL into *imgix* buffer."
   (erase-buffer)
   (insert (format "%s\n" url))
   (let ((shr-table-depth 1)) ;; hack to not get shr keymap to load
     (shr-tag-img nil url))
   (goto-char 0)
-  (message "Loaded %s" url))
- ; (read-only-mode t))
-
+  (message "*imgix* loaded %s" url))
 
 (defun imgix-display-image ()
   "Display image in *imgix* buffer."
@@ -374,6 +421,8 @@
   (define-key imgix-display-mode-map (kbd "b") 'imgix-prompt-buffer-url-base)
   (define-key imgix-display-mode-map (kbd "o") 'imgix-open-in-browser)
   (define-key imgix-display-mode-map (kbd "s") 'imgix-save-image)
+  (define-key imgix-display-mode-map (kbd "p") 'imgix-prompt-preset)
+
   (define-key imgix-display-mode-map (kbd "d") 'imgix-apply-inline-edit))
 
 
@@ -395,11 +444,13 @@
   (message "imgix-display-mode enabled"))
 
 (defun imgix ()
+  "Start imgix mode. Creates and/or switches to *imgix* buffer."
   (interactive)
   (imgix-display-image))
 
 
-(global-set-key (kbd "C-c C-u") 'imgix-edit-selected-url)
+;(global-set-key (kbd "C-c C-u") 'imgix-edit-selected-url)
+(global-set-key (kbd "C-c C-u") 'imgix-edit-url-at-point)
 (global-set-key (kbd "C-c C-e") 'imgix)
 
 ;;;;;REFERENCE:
