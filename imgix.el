@@ -98,8 +98,15 @@
 
 (defun imgix-presets-add (name params)
   "Add imgix-preset NAME to saved list of presets with its PARAMS."
-  (let ((imgix-presets (imgix-presets-load)))
-    (imgix-presets-save (cons (make-imgix-preset :name name :params params) imgix-presets))))
+  (let ((imgix-presets (imgix-presets-load))
+        (existing-preset (imgix-presets-get-by-name name)))
+    (if (not existing-preset)
+      (imgix-presets-save (cons (make-imgix-preset :name name :params params) imgix-presets))
+      ;; already exists remove old, and add in new
+      (imgix-presets-save (cons (make-imgix-preset :name name :params params)
+                          (-reject (lambda (x)
+                                           (string= (imgix-preset-name x) name))
+                                     imgix-presets))))))
 
 
 (defun imgix-list-preset-names ()
@@ -127,7 +134,7 @@
   "Get preset params by NAME."
   (imgix-preset-params (imgix-presets-get-by-name name)))
 
-(defun imgix-prompt-preset ()
+(defun imgix-prompt-preset-apply ()
   "Prompt for preset and apply params."
   (interactive)
   (let* ((preset (ido-completing-read "Select preset: " (imgix-list-preset-names)))
@@ -144,6 +151,19 @@
         (imgix-display-image))
 
       (message "\"%s\" preset not found." preset))))
+
+(defun imgix-prompt-preset-save ()
+  "Prompt for name to save current query string as preset."
+  (interactive)
+  (let* ((params (imgix-get-url-params))
+         (prompt-text (format "Preset name for \"%s\": " params))
+         (preset-name (read-from-minibuffer prompt-text)))
+    (if (or
+          (not (imgix-presets-get-by-name preset-name))
+          (y-or-n-p (format "\"%s\" already exists. Overwrite? " preset-name)))
+      (imgix-presets-add preset-name params)
+      (message "Save cancelled"))))
+
 
 (defun imgix-merge-qs (qs1 qs2)
   "Combine two query strings QS1 QS2."
@@ -421,7 +441,8 @@
   (define-key imgix-display-mode-map (kbd "b") 'imgix-prompt-buffer-url-base)
   (define-key imgix-display-mode-map (kbd "o") 'imgix-open-in-browser)
   (define-key imgix-display-mode-map (kbd "s") 'imgix-save-image)
-  (define-key imgix-display-mode-map (kbd "p") 'imgix-prompt-preset)
+  (define-key imgix-display-mode-map (kbd "p") 'imgix-prompt-preset-apply)
+  (define-key imgix-display-mode-map (kbd "=") 'imgix-prompt-preset-save)
 
   (define-key imgix-display-mode-map (kbd "d") 'imgix-apply-inline-edit))
 
