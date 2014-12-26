@@ -58,7 +58,12 @@
 
 (defun imgix-load-json (data-path)
   "Get file of json DATA-PATH as elisp hash table."
-  (imgix-json-decode-hash (imgix-get-file-contents data-path)))
+  (imgix-json-decode-hash (imgix-get-file-contents (imgix-expand-path data-path))))
+
+(defun imgix-expand-path (path)
+  "Expand PATH for relative directory."
+  (expand-file-name
+   (concat (file-name-directory (or load-file-name default-directory)) "./" path)))
 
 ;TODO use assets folder instead...
 (defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=200")
