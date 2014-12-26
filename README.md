@@ -1,6 +1,6 @@
 ![imgix logo](https://assets.imgix.net/imgix-logo-web-2014.pdf?page=2&fm=png&w=200&h=200)
 
-imgix-emacs [![Build Status](https://travis-ci.org/imgix/imgix-emacs.svg?branch=master)](https://travis-ci.org/imgix/imgix-emacs)
+imgix-emacs [![Build Status](https://travis-ci.org/imgix/imgix-emacs.svg?branch=master)](https://travis-ci.org/imgix/imgix-emacs) [![MELPA](http://melpa.org/packages/imgix-badge.svg)](http://melpa.org/#/imgix)
 ===========
 
 ![imgix emacs text example](https://jackangers.imgix.net/imgix_emacs_txt_example.gif)
@@ -22,7 +22,15 @@ Dependencies
 Installation
 ------------
 
-** TODO **
+`imgix` is availabe on [MELPA](http://melpa.milkbox.net/)
+
+Add a package archive to your `~/.emacs.d/init.el` or `~/.emacs`:
+
+    (require 'package)
+    (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+
+then run `M-x package-install <RET> imgix <RET>`
+
 
 <a name="getting-started"></a>
 Getting Started
@@ -30,7 +38,7 @@ Getting Started
 
 There are two main ways to enter the `*imgix*` buffer for editing images.
 
-Use `imgix-edit-selected-url` to edit the imgix URL that is currently selected in a buffer. When you're done editing you can press <kbd>d</kbd> to replace the selected URL in that buffer with your edits.
+Use `imgix-edit-url-at-url` to edit the imgix URL that is currently under the cursor. When you're done editing you can press <kbd>d</kbd> to replace the selected URL in that buffer with your edits.
 
 Use `imgix` to enter the the `*imgix*` buffer directly.
 
@@ -60,5 +68,5 @@ To override the default key bindings put the following your `.emacs` with your n
 
     (setq imgix-mode-map
       (let ((map (make-sparse-keymap)))
-        (define-key map (kbd "r") 'imgix-update-url-param) ;; use "r" instead of "u"
+        (define-key map (kbd "r") 'imgix-update-url-param) ;; to use "r" instead of "u" for updating param in *imgix*
         map))
