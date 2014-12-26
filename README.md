@@ -1,7 +1,11 @@
+![imgix logo](https://assets.imgix.net/imgix-logo-web-2014.pdf?page=2&fm=png&w=200&h=200)
+
 imgix-emacs
 ===========
 
-An emacs package for easily, and visually, editing images via [imgix](http://www.imgix.com). You can then easily use the imgix URL in your code or save the image.
+![imgix emacs text example](https://jackangers.imgix.net/imgix_emacs_txt_example.gif)
+
+An emacs package for easily, and visually, editing images via [imgix](http://www.imgix.com). You can then easily use the generated imgix URL in your code or save the image.
 
 
 * [Dependencies](#dependencies)
@@ -32,7 +36,7 @@ Use `imgix` to enter the the `*imgix*` buffer directly.
 
 To set up shortcut keys for these add the following to your `.emacs` or use <kbd>M</kbd>+<kbd>x</kbd> to trigger them by name.
 
-    (global-set-key (kbd "C-c C-u") 'imgix-edit-selected-url)
+    (global-set-key (kbd "C-c C-u") 'imgix-edit-url-at-point)
     (global-set-key (kbd "C-c C-i") 'imgix)
 
 
@@ -40,21 +44,21 @@ Editing Images
 --------------
 When in the `*imgix*` buffer the following default key bindings are available:
 
-* <kbd>u</kbd> - Update imgix URL params (prompts for param and value) `imgix-update-url-param`
-* <kbd>e</kbd> - Edit full imgix URL `imgix-prompt-buffer-url`
-* <kbd>b</kbd> - Edit base imgix URL (keep applied params onnew base) `imgix-prompt-buffer-url-base`
-* <kbd>o</kbd> - Open image in your default browser `imgix-open-in-browser`
-* <kbd>s</kbd> - Save image to disk `imgix-save-image`
-* <kbd>d</kbd> - If entered `*imgix*` via `imgix-edit-selected-url` then replaces URL in that buffer with current `*imgix*` URL  `imgix-apply-inline-edit`
+| shortcut   | about  | function  |
+|---|---|---|
+| <kbd>u</kbd>  | Update imgix URL params (prompts for param and value)  | `imgix-update-url-param`  |
+| <kbd>e</kbd>  | Edit full imgix URL   | `imgix-prompt-buffer-url`  |
+| <kbd>b</kbd>  | Edit base imgix URL (keep applied params on new base)  | `imgix-prompt-buffer-url-base`  |
+| <kbd>o</kbd>  | Open image in your default browser   | `imgix-open-in-browser`  |
+| <kbd>s</kbd>  | Save image to disk   | `imgix-save-image`  |
+| <kbd>d</kbd>  | Replace generated imgix URL in the buffer where `imgix-edit-url-at-point` was called.  | `imgix-apply-inline-edit`  |
+| <kbd>p</kbd>  | Select/Apply a preset to the current image.  | `imgix-prompt-preset-apply`  |
+| <kbd>x</kbd>  | Save current imgix params as a new preset.  | `imgix-prompt-preset-save`  |
+
 
 To override the default key bindings put the following your `.emacs` with your new key bindings in the `kbd` expression.
 
     (setq imgix-mode-map
       (let ((map (make-sparse-keymap)))
-        (define-key map (kbd "u") 'imgix-update-url-param)
-        (define-key map (kbd "e") 'imgix-prompt-buffer-url)
-        (define-key map (kbd "b") 'imgix-prompt-buffer-url-base)
-        (define-key map (kbd "o") 'imgix-open-in-browser)
-        (define-key map (kbd "s") 'imgix-save-image)
-        (define-key map (kbd "d") 'imgix-apply-inline-edit)
+        (define-key map (kbd "r") 'imgix-update-url-param) ;; use "r" instead of "u"
         map))

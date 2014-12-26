@@ -442,7 +442,7 @@
   (define-key imgix-display-mode-map (kbd "o") 'imgix-open-in-browser)
   (define-key imgix-display-mode-map (kbd "s") 'imgix-save-image)
   (define-key imgix-display-mode-map (kbd "p") 'imgix-prompt-preset-apply)
-  (define-key imgix-display-mode-map (kbd "=") 'imgix-prompt-preset-save)
+  (define-key imgix-display-mode-map (kbd "x") 'imgix-prompt-preset-save)
 
   (define-key imgix-display-mode-map (kbd "d") 'imgix-apply-inline-edit))
 
@@ -465,7 +465,7 @@
   (message "imgix-display-mode enabled"))
 
 (defun imgix ()
-  "Start imgix mode. Creates and/or switches to *imgix* buffer."
+  "Start imgix mode - create or switch to *imgix* buffer."
   (interactive)
   (imgix-display-image))
 

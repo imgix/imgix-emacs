@@ -1,23 +1,21 @@
 
+* default presets...
+* melpa for (package-install 'imgix)
 * good short example (~3 transforms) for gif at top..
 * image-dired of examples from imgix source.
 * undo chain
-* (browse-url-at-point) like for (browse-url-url-at-point) -> imgix-url-
 * prompt y/n if all dependencies should be removed too if parent is removed (removing txtclr if text is removed)
-* presets...
 * docs...
 * help bindings on h and "?"
 * for url fields remember past url values and have those as options
-* melpa for (package-install 'imgix)
+
 * special nesting of URLs for blend/mask
 * custom mode line of current url...
 * should these be prefixed imgix/ or imgix-- ?
 * s3 uploader / source configuration...?
 
-
 http://danmidwood.com/content/2014/11/21/animated-paredit.html
 https://github.com/keycastr/keycastr
-
 
 ---------
 
