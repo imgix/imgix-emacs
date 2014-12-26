@@ -4,6 +4,7 @@
 
 ;; Author: imgix
 ;; Version: 1.0
+;; Package-Requires: ((json "1.2") (ht "2.0") (s "1.9.0") (dash "2.9.0"))
 ;; Keywords: images, image processing, image editing, sepia, blur
 
 ;;; package --- Summary
