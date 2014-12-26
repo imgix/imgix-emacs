@@ -465,6 +465,7 @@
 
   (message "imgix-display-mode enabled"))
 
+;;;###autoload
 (defun imgix ()
   "Start imgix mode - create or switch to *imgix* buffer."
   (interactive)
