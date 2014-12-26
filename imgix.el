@@ -22,6 +22,7 @@
 (require 'shr)
 (require 'browse-url)
 (require 'pp)
+(require 'cl-lib)
 
 (defgroup imgix nil
   "Use imgix to edit files in emacs via imgix."
@@ -80,7 +81,7 @@
 
 ;(type-of (ht-get imgix-params-option-lookup "txtalign"))
 
-(defstruct imgix-preset "named imgix params" (name "") (params ""))
+(cl-defstruct imgix-preset "named imgix params" (name "") (params ""))
 
 (defcustom imgix-presets-file
   (expand-file-name (concat (if (boundp 'user-emacs-directory)
@@ -477,17 +478,9 @@
   (imgix-display-image))
 
 
-;(global-set-key (kbd "C-c C-u") 'imgix-edit-selected-url)
-(global-set-key (kbd "C-c C-u") 'imgix-edit-url-at-point)
-(global-set-key (kbd "C-c C-e") 'imgix)
-
-;;;;;REFERENCE:
-
-;; https://github.com/emacs-mirror/emacs/blob/ac34b6b2b9aec5bc262ae1f6c54036de11fa44e9/lisp/dired.el#L1960
-;; https://github.com/magit/git-modes/blob/master/git-commit-mode.el
-;; https://github.com/bbatsov/emacs-lisp-style-guide
-;; http://stackoverflow.com/questions/14885670/create-new-mode-in-emacs/14887163#14887163
-;; https://github.com/emacs-mirror/emacs/blob/master/lisp/net/eww.el
+;; (global-set-key (kbd "C-c C-u") 'imgix-edit-selected-url)
+;; (global-set-key (kbd "C-c C-u") 'imgix-edit-url-at-point)
+;; (global-set-key (kbd "C-c C-e") 'imgix)
 
 (provide 'imgix)
 ;;; imgix.el ends here
