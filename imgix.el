@@ -64,8 +64,7 @@
   (expand-file-name
    (concat (file-name-directory (or load-file-name default-directory)) "./" path)))
 
-;TODO use assets folder instead...
-(defconst imgix-buffer-url "http://jackangers.imgix.net/chester.png?w=200")
+(defconst imgix-buffer-url "http://assets.imgix.net/examples/mountain.jpg?w=500")
 (defconst imgix-params-depends-lookup (imgix-load-json "data/param_depends.json"))
 (defconst imgix-params-default-lookup (imgix-load-json "data/default_values.json"))
 (defconst imgix-params-title-lookup (imgix-load-json "data/params.json"))
@@ -77,7 +76,6 @@
 (defvar imgix-inline-edit-state nil)
 (defvar imgix-last-updated-param nil)
 
-;(type-of (ht-get imgix-params-option-lookup "txtalign"))
 
 (cl-defstruct imgix-preset "named imgix params" (name "") (params ""))
 
@@ -117,9 +115,6 @@
 (defun imgix-list-preset-names ()
   "Return list of the imgix-preset names (for prompting)."
   (mapcar (lambda (x) (imgix-preset-name x)) (imgix-presets-load)))
-
-;;TODO (defun imgix-apply-preset
-;; (defun imgix-pick-preset)
 
 (defun imgix-presets-save (imgix-presets)
   "Save the IMGIX-PRESETS to disk."
