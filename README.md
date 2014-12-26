@@ -1,6 +1,6 @@
 ![imgix logo](https://assets.imgix.net/imgix-logo-web-2014.pdf?page=2&fm=png&w=200&h=200)
 
-imgix-emacs
+imgix-emacs [![Build Status](https://travis-ci.org/imgix/imgix-emacs.svg?branch=master)](https://travis-ci.org/imgix/imgix-emacs)
 ===========
 
 ![imgix emacs text example](https://jackangers.imgix.net/imgix_emacs_txt_example.gif)
