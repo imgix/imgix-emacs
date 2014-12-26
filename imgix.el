@@ -1,13 +1,11 @@
-;;; imgix.el --- imgix image url editor
+;;; imgix.el --- Major mode for editing images in emacs via imgix
 
 ;; Copyright (C) 2014 imgix
 
 ;; Author: imgix
 ;; Version: 1.0
-;; Package-Requires: ((json "1.2") (ht "2.0") (s "1.9.0") (dash "2.9.0"))
+;; Package-Requires: ((json "1.2") (ht "2.0") (s "1.9.0") (dash "2.9.0") (cl-lib "0.5"))
 ;; Keywords: images, image processing, image editing, sepia, blur
-
-;;; package --- Summary
 
 ;;; Commentary:
 
