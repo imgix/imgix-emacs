@@ -1,46 +1,12 @@
-
+* image signing options
 * default presets...
-* melpa for (package-install 'imgix)
-* good short example (~3 transforms) for gif at top..
 * image-dired of examples from imgix source.
 * undo chain
 * prompt y/n if all dependencies should be removed too if parent is removed (removing txtclr if text is removed)
-* docs...
+* embed docs...
 * help bindings on h and "?"
 * for url fields remember past url values and have those as options
-
 * special nesting of URLs for blend/mask
 * custom mode line of current url...
 * should these be prefixed imgix/ or imgix-- ?
 * s3 uploader / source configuration...?
-
-http://danmidwood.com/content/2014/11/21/animated-paredit.html
-https://github.com/keycastr/keycastr
-
----------
-
-chrome extension to highlight ()
-
-- see visor for selection elements vs using whole page (2 options, undo->refresh)
--https://news.ycombinator.com/item?id=7043299
-
- var rainbow_parens = function(jq_el) {
-    var html = jq_el.html();
-    var processed_html = "";
-    var nesting_level = -160;
-    var color;
-    for (var i = 0; i < html.length; i++) {
-      if (html[i] == '(') {
-        nesting_level += 160;
-        color = 'rgba(' + Math.min(Math.max((nesting_level % 510) - 255, 0), 255) + ',0,' + Math.min((nesting_level % 510), 255) + ',1)';
-        processed_html += '<span style="color: ' + color + '; text-shadow: -1px 0px 0px ' + color + '">(</span>';
-      } else if (html[i] == ')') {
-        color = 'rgba(' + Math.min(Math.max((nesting_level % 510) - 255, 0), 255) + ',0,' + Math.min((nesting_level % 510), 255) + ',1)';
-        processed_html += '<span style="color: ' + color + '; text-shadow: 1px 0px 0px ' + color + '">)</span>';
-        nesting_level -= 160;
-      } else {
-        processed_html += html[i];
-      }
-    }
-    jq_el.html(processed_html);
-  };rainbow_parens($('.highlight'));
